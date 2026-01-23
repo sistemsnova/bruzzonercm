@@ -52,7 +52,8 @@ const Ecommerce: React.FC<EcommerceProps> = () => {
 
   // Removed ML and Andreani related states
 
-  const debounceTimeoutRefPicker = useRef<any>();
+  // Fix: Initialize useRef with null to satisfy TypeScript requirement
+  const debounceTimeoutRefPicker = useRef<any>(null);
 
   const loadPickerProducts = useCallback(async (
     isNewSearch: boolean = false, 

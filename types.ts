@@ -224,3 +224,42 @@ export interface RemitoItem {
   originalSaleUnit: Product['saleUnit'];
   originalSaleUnitConversionFactor: number;
 }
+
+// *** NEW/UPDATED INTERFACES FOR REMITO/FACTURA RELATIONSHIP ***
+export interface Remito {
+  id: string;
+  date: string;
+  client: string;
+  clientId: string; // Added client ID for easier linking
+  itemsCount: number;
+  itemsList: RemitoItem[];
+  total: number;
+  status: 'pendiente' | 'entregado' | 'cancelado' | 'facturado'; // Added 'facturado' status
+  invoiceId?: string; // Link to the Sale (Invoice) document
+}
+
+export interface SaleItem { // Used in Sale document
+  id: string; // Product ID
+  sku: string;
+  name: string;
+  brand: string;
+  price: number; // Sale price at the time of sale
+  quantity: number;
+  subtotal: number; // price * quantity
+  isManual?: boolean;
+  selectedSaleUnit?: Product['saleUnit'];
+}
+
+export interface Sale { // Represents a final invoice/ticket
+  id: string;
+  clientName: string;
+  clientId: string | null;
+  items: SaleItem[]; // Renamed from 'CartItem' to 'SaleItem' for clarity
+  total: number;
+  paymentDetails: PaymentDetail[];
+  docType: 'ticket' | 'factura_a' | 'factura_b' | 'remito' | 'presupuesto'; // Changed 'remito' here means a direct remito-sale
+  date: string;
+  status: 'completado' | 'pendiente';
+  seller: string;
+  remitoIds?: string[]; // Links to associated Remito documents
+}

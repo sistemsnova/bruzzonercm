@@ -12,9 +12,9 @@ import {
   Users as UsersIcon
 } from 'lucide-react';
 import { useFirebase } from '../context/FirebaseContext';
-import { Product, Client, PaymentDetail } from '../types';
+import { Product, Client, PaymentDetail, SaleItem, Sale } from '../types'; // Import Sale and SaleItem
 
-interface CartItem {
+interface CartItem { // This is an internal UI type, not directly stored as SaleItem
   id: string;
   sku: string;
   name: string;
@@ -60,7 +60,7 @@ const Sales: React.FC = () => {
   const [searchableProducts, setSearchableProducts] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const debounceTimeoutRef = useRef<any>();
+  const debounceTimeoutRef = useRef<any>(null);
 
   const debouncedSearchProducts = useCallback((value: string) => {
     if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
@@ -147,15 +147,31 @@ const Sales: React.FC = () => {
 
     setIsProcessing(true);
     try {
-      const saleData = {
+      // Map CartItem to SaleItem
+      const saleItems: SaleItem[] = cart.map(item => ({
+        id: item.id,
+        sku: item.sku,
+        name: item.name,
+        brand: item.brand,
+        price: item.price,
+        quantity: item.quantity,
+        subtotal: item.price * item.quantity,
+        isManual: item.isManual,
+        selectedSaleUnit: item.selectedSaleUnit,
+      }));
+
+      // Sale data structure conforming to the new Sale interface
+      const saleData: Omit<Sale, 'id'> = {
         clientName: selectedClient?.name || 'Mostrador',
         clientId: selectedClient?.id || null,
-        items: cart,
+        items: saleItems,
         total: totalCartAmount,
         paymentDetails,
         docType,
         date: new Date().toISOString(),
-        status: docType === 'presupuesto' ? 'pendiente' : 'completado'
+        status: docType === 'presupuesto' ? 'pendiente' : 'completado',
+        seller: 'Vendedor Demo', // Placeholder for actual user's name
+        remitoIds: [], // Direct sales usually don't originate from remitos.
       };
 
       if (docType === 'presupuesto') {
@@ -178,7 +194,7 @@ const Sales: React.FC = () => {
         });
         alert("Presupuesto guardado con éxito.");
       } else {
-        await addSale(saleData);
+        await addSale(saleData); // Use the updated addSale
         alert(`Operación "${docType.toUpperCase()}" finalizada con éxito.`);
       }
 
@@ -401,7 +417,7 @@ const Sales: React.FC = () => {
       {/* Modal: Checkout */}
       {showCheckout && (
         <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-xl z-[120] flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300 flex flex-col md:flex-row max-h-[90vh]">
+          <div className="bg-white w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200 flex flex-col md:flex-row max-h-[90vh]">
             
             <div className="flex-1 p-10 overflow-y-auto custom-scrollbar space-y-8">
               <div className="flex justify-between items-center">

@@ -1,7 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 body { 
   font-family: 'Inter', sans-serif; 
 }
+
+/* Tus estilos personalizados de scrollbar */
 .custom-scrollbar::-webkit-scrollbar { 
   width: 6px; 
 }

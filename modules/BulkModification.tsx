@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Search, CheckSquare, Square, Edit3, Save, X, Tag, Boxes, Percent, Truck, LayoutGrid, ListOrdered, RefreshCcw, Loader2, AlertCircle, Layers, ArrowUpRight } from 'lucide-react';
 import { Product } from '../types';
@@ -26,8 +27,8 @@ const BulkModification: React.FC = () => {
   const [hasMoreProducts, setHasMoreProducts] = useState(true);
   const [isProductsLoading, setIsProductsLoading] = useState(false); // Local loading for products
 
-  // Fix: Changed NodeJS.Timeout to any to resolve namespace error in browser environment
-  const debounceTimeoutRef = useRef<any>();
+  // Fix: Changed NodeJS.Timeout to any to resolve namespace error in browser environment, initialized with null
+  const debounceTimeoutRef = useRef<any>(null);
 
   const debouncedSetSearch = useCallback((value: string) => {
     if (debounceTimeoutRef.current) {
@@ -46,12 +47,13 @@ const BulkModification: React.FC = () => {
   ) => {
     setIsProductsLoading(true);
     try {
+      // Fix: Ensured orderDirection is cast as constant for type safety
       const options = {
         limit: ITEMS_PER_PAGE,
         searchTerm: searchTerm.toLowerCase().trim(),
         startAfterDoc: isNewSearch ? undefined : currentLastVisibleDoc,
         orderByField: 'name', 
-        orderDirection: 'asc' // Fix: Removed explicit 'as "asc"' type assertion
+        orderDirection: 'asc' as const 
       };
 
       const { products: fetchedProducts, lastVisible, hasMore } = await fetchProductsPaginatedAndFiltered(options);

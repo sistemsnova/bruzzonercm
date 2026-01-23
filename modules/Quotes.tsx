@@ -29,7 +29,8 @@ const Quotes: React.FC = () => {
   const [pickerLastVisibleDoc, setPickerLastVisibleDoc] = useState<any>(null);
   const [hasMorePickerProducts, setHasMorePickerProducts] = useState(true);
   const [isPickerProductsLoading, setIsPickerProductsLoading] = useState(false);
-  const debounceTimeoutRefPicker = useRef<any>();
+  // Fix: Initialize useRef with null to satisfy TypeScript requirement
+  const debounceTimeoutRefPicker = useRef<any>(null);
 
   // Helper to calculate product price based on client's price list and special discount
   const calculateProductPrice = useCallback((product: Product, client: Client | null): number => {

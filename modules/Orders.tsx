@@ -4,7 +4,7 @@ import {
   ListTodo, Plus, Search, User, Calendar, Tag, ShoppingCart,
   Package, DollarSign, Edit3, Trash2, X, Info, Loader2,
   CheckCircle2, AlertCircle, RefreshCw, FileText, Printer,
-  ChevronRight, ArrowUpRight, Ban, Save // Fix: Added Save icon import
+  ChevronRight, ArrowUpRight, Ban, Save
 } from 'lucide-react';
 import { useFirebase } from '../context/FirebaseContext';
 import { Product, Client, Order, OrderItem } from '../types';
@@ -35,7 +35,7 @@ const Orders: React.FC = () => {
   const [filterStatus, setFilterStatus] = useState<OrderStatus | 'all'>('all');
 
   const [showOrderModal, setShowOrderModal] = useState(false);
-  const [activeOrder, setActiveOrder] = useState<Order | null>(null); // For editing/viewing
+  const [activeOrder, setActiveOrder] = useState<Order | null>(null);
   const [orderFormData, setOrderFormData] = useState<Partial<Order>>({
     clientId: '',
     clientName: '',
@@ -47,19 +47,17 @@ const Orders: React.FC = () => {
     notes: '',
     isServiceOrder: false,
   });
-  const [orderItemsForm, setOrderItemsForm] = useState<OrderItem[]>([]); // Items being edited in modal
+  const [orderItemsForm, setOrderItemsForm] = useState<OrderItem[]>([]);
   const [isSavingOrder, setIsSavingOrder] = useState(false);
 
-  // Product Picker states (reused from Quotes/Sales)
   const [showProductPicker, setShowProductPicker] = useState(false);
   const [pickerSearchQuery, setPickerSearchQuery] = useState('');
   const [pickerProducts, setPickerProducts] = useState<Product[]>([]);
   const [pickerLastVisibleDoc, setPickerLastVisibleDoc] = useState<any>(null);
   const [hasMorePickerProducts, setHasMorePickerProducts] = useState(true);
   const [isPickerProductsLoading, setIsPickerProductsLoading] = useState(false);
-  const debounceTimeoutRefPicker = useRef<any>();
+  const debounceTimeoutRefPicker = useRef<any>(null);
 
-  // Service Item states
   const [showServiceItemModal, setShowServiceItemModal] = useState(false);
   const [serviceItemData, setServiceItemData] = useState({
     name: '',
@@ -113,7 +111,6 @@ const Orders: React.FC = () => {
     }
   }, [pickerSearchQuery, showProductPicker, loadPickerProducts]);
 
-  // Handle client selection in order form
   useEffect(() => {
     if (orderFormData.clientId) {
       const client = clients.find(c => c.id === orderFormData.clientId);
@@ -125,7 +122,6 @@ const Orders: React.FC = () => {
     }
   }, [orderFormData.clientId, clients]);
 
-  // Recalculate total whenever order items change
   useEffect(() => {
     const newTotal = orderItemsForm.reduce((sum, item) => sum + item.subtotal, 0);
     setOrderFormData(prev => ({ ...prev, total: parseFloat(newTotal.toFixed(2)) }));
@@ -174,7 +170,7 @@ const Orders: React.FC = () => {
     if (existingIndex !== -1) {
       handleOrderItemQuantityChange(existingIndex, orderItemsForm[existingIndex].quantity + 1);
     } else {
-      const unitPrice = product.salePrice; // Use sale price for orders
+      const unitPrice = product.salePrice;
       setOrderItemsForm(prev => [
         ...prev,
         {
@@ -202,7 +198,7 @@ const Orders: React.FC = () => {
     setOrderItemsForm(prev => [
       ...prev,
       {
-        productId: `service-${Date.now()}`, // Unique ID for service
+        productId: `service-${Date.now()}`, 
         sku: 'SERVICIO',
         name: serviceItemData.name,
         brand: 'N/A',
@@ -211,6 +207,7 @@ const Orders: React.FC = () => {
         subtotal: parseFloat(subtotal.toFixed(2)),
         isService: true,
         serviceDescription: serviceItemData.serviceDescription,
+        originalProduct: null,
       }
     ]);
     setShowServiceItemModal(false);
@@ -225,12 +222,15 @@ const Orders: React.FC = () => {
     setIsSavingOrder(true);
     try {
       const orderToSave: Omit<Order, 'id'> = {
-        ...orderFormData,
+        clientId: orderFormData.clientId!,
+        clientName: orderFormData.clientName || 'Cliente',
         items: orderItemsForm,
         total: orderItemsForm.reduce((sum, item) => sum + item.subtotal, 0),
         status: orderFormData.status || 'pendiente_preparacion',
         dateCreated: orderFormData.dateCreated || new Date().toISOString().split('T')[0],
-        isServiceOrder: orderItemsForm.some(item => item.isService), // Determine if it's a service order based on items
+        dateDue: orderFormData.dateDue,
+        notes: orderFormData.notes,
+        isServiceOrder: orderItemsForm.some(item => item.isService), 
       };
 
       if (activeOrder) {
@@ -272,15 +272,13 @@ const Orders: React.FC = () => {
     }
   };
 
-
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
       const matchesSearch = order.clientName.toLowerCase().includes(filterSearch.toLowerCase()) || order.id.toLowerCase().includes(filterSearch.toLowerCase());
       const matchesStatus = filterStatus === 'all' || order.status === filterStatus;
       return matchesSearch && matchesStatus;
-    }).sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime()); // Sort by most recent
+    }).sort((a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime());
   }, [orders, filterSearch, filterStatus]);
-
 
   const renderProductPickerModal = () => (
     <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] flex items-center justify-center p-4">
@@ -400,7 +398,7 @@ const Orders: React.FC = () => {
           </div>
         </div>
         <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
-          <button onClick={() => setShowServiceItemModal(false)} className="flex-1 py-4 bg-white border border-slate-200 rounded-2xl font-black text-slate-400 uppercase text-xs tracking-widest">Cancelar</button>
+          <button onClick={() => setShowServiceItemModal(false)} className="flex-1 py-4 bg-white border border-slate-200 rounded-2xl font-black text-slate-500 uppercase text-xs tracking-widest">Cancelar</button>
           <button onClick={addServiceToOrder} className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-600/20 hover:bg-blue-500 transition-all flex items-center justify-center gap-2 uppercase text-xs tracking-widest">
             Añadir Servicio <Plus className="w-5 h-5" />
           </button>
@@ -408,7 +406,6 @@ const Orders: React.FC = () => {
       </div>
     </div>
   );
-
 
   return (
     <div className="space-y-6 pb-20">
@@ -569,7 +566,6 @@ const Orders: React.FC = () => {
         </div>
       </div>
 
-      {/* MODAL: NEW/EDIT ORDER */}
       {showOrderModal && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
           {showProductPicker && renderProductPickerModal()}
@@ -578,159 +574,132 @@ const Orders: React.FC = () => {
             <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-orange-600 text-white rounded-2xl flex items-center justify-center shadow-lg">
-                  <ListTodo className="w-6 h-6" />
+                  <Plus className="w-6 h-6" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">{activeOrder ? 'Editar Pedido' : 'Nuevo Pedido'}</h2>
-                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">{activeOrder ? `ID: ${activeOrder.id}` : 'Registro de nueva orden'}</p>
+                  <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mt-1">Configuración de orden de servicio/venta</p>
                 </div>
               </div>
-              <button onClick={() => setShowOrderModal(false)} className="p-2 hover:bg-white rounded-xl text-slate-400 transition-all">
+              <button onClick={() => setShowOrderModal(false)} className="p-2 hover:bg-white rounded-xl text-slate-400">
                 <X className="w-6 h-6" />
               </button>
             </div>
-
+            
             <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
-              {/* General Order Info */}
-              <section className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
-                    <User className="w-3 h-3" /> Cliente
-                  </label>
-                  <select
-                    value={orderFormData.clientId || ''}
-                    onChange={e => setOrderFormData(prev => ({ ...prev, clientId: e.target.value }))}
-                    className="w-full px-5 py-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none font-bold bg-white"
-                  >
-                    <option value="">Seleccionar Cliente</option>
-                    {clients.map(client => (
-                      <option key={client.id} value={client.id}>{client.name} ({client.cuit})</option>
-                    ))}
-                  </select>
+              <section className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
+                      <User className="w-3 h-3" /> Cliente
+                    </label>
+                    <select
+                      value={orderFormData.clientId || ''}
+                      onChange={e => setOrderFormData(prev => ({ ...prev, clientId: e.target.value }))}
+                      className="w-full px-5 py-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none font-bold bg-white"
+                    >
+                      <option value="">Seleccionar Cliente</option>
+                      {clients.map(client => (
+                        <option key={client.id} value={client.id}>{client.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" /> Fecha Entrega Estimada
+                    </label>
+                    <input
+                      type="date"
+                      value={orderFormData.dateDue || ''}
+                      onChange={e => setOrderFormData(prev => ({ ...prev, dateDue: e.target.value }))}
+                      className="w-full px-5 py-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none font-bold bg-white"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" /> Fecha de Entrega/Vencimiento
-                  </label>
-                  <input
-                    type="date"
-                    value={orderFormData.dateDue || ''}
-                    onChange={e => setOrderFormData(prev => ({ ...prev, dateDue: e.target.value }))}
-                    className="w-full px-5 py-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none font-bold bg-white"
-                  />
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Artículos y Servicios</label>
+                    <div className="flex gap-2">
+                      <button onClick={() => setShowProductPicker(true)} className="px-3 py-1.5 bg-orange-50 text-orange-600 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                        <Plus className="w-3 h-3" /> Producto
+                      </button>
+                      <button onClick={() => setShowServiceItemModal(true)} className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                        <Plus className="w-3 h-3" /> Servicio
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="border border-slate-100 rounded-2xl overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
+                        <tr>
+                          <th className="px-6 py-3 text-left">Ítem</th>
+                          <th className="px-6 py-3 text-center">Cant.</th>
+                          <th className="px-6 py-3 text-right">Unitario</th>
+                          <th className="px-6 py-3 text-right">Subtotal</th>
+                          <th className="px-6 py-3 text-center"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {orderItemsForm.length === 0 ? (
+                          <tr><td colSpan={5} className="py-10 text-center text-slate-400 italic">No hay ítems en el pedido</td></tr>
+                        ) : (
+                          orderItemsForm.map((item, idx) => (
+                            <tr key={idx} className="text-sm">
+                              <td className="px-6 py-4">
+                                <p className="font-bold text-slate-800">{item.name}</p>
+                                <p className="text-[10px] text-slate-400 uppercase">{item.sku}</p>
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <input 
+                                  type="number" 
+                                  value={item.quantity} 
+                                  onChange={e => handleOrderItemQuantityChange(idx, parseInt(e.target.value))}
+                                  className="w-16 text-center border rounded-lg font-bold"
+                                />
+                              </td>
+                              <td className="px-6 py-4 text-right">${item.unitPrice.toLocaleString()}</td>
+                              <td className="px-6 py-4 text-right font-black">${item.subtotal.toLocaleString()}</td>
+                              <td className="px-6 py-4 text-center">
+                                <button onClick={() => handleRemoveOrderItem(idx)} className="text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-                <div className="space-y-2 col-span-2">
+
+                <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Notas del Pedido</label>
                   <textarea
                     value={orderFormData.notes || ''}
                     onChange={e => setOrderFormData(prev => ({ ...prev, notes: e.target.value }))}
-                    placeholder="Detalles importantes para la preparación o entrega..."
                     className="w-full px-5 py-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none font-medium h-24 resize-none"
-                  ></textarea>
+                    placeholder="Instrucciones especiales de entrega o preparación..."
+                  />
                 </div>
-              </section>
-
-              {/* Order Items */}
-              <section className="space-y-6 pt-4 border-t border-slate-100">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                    <ShoppingCart className="w-4 h-4 text-orange-600" /> Artículos y Servicios
-                  </h3>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setShowServiceItemModal(true)}
-                      className="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-xs flex items-center gap-2 hover:bg-blue-100 transition-all"
-                    >
-                      <FileText className="w-4 h-4" /> Añadir Servicio
-                    </button>
-                    <button
-                      onClick={() => setShowProductPicker(true)}
-                      className="px-4 py-2 bg-orange-50 text-orange-600 rounded-xl font-bold text-xs flex items-center gap-2 hover:bg-orange-100 transition-all"
-                    >
-                      <Package className="w-4 h-4" /> Añadir Producto
-                    </button>
-                  </div>
-                </div>
-
-                <div className="border border-slate-100 rounded-[1.5rem] overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
-                      <tr>
-                        <th className="px-6 py-3 text-left">Artículo/Servicio</th>
-                        <th className="px-6 py-3 text-center">Cant.</th>
-                        <th className="px-6 py-3 text-right">Precio Unit.</th>
-                        <th className="px-6 py-3 text-right">Subtotal</th>
-                        <th className="px-6 py-3 text-center">Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {orderItemsForm.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="py-10 text-center text-slate-400 italic">
-                            No hay ítems en este pedido.
-                          </td>
-                        </tr>
-                      ) : (
-                        orderItemsForm.map((item, idx) => (
-                          <tr key={idx} className="text-sm hover:bg-slate-50/50 transition-colors">
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-3">
-                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.isService ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-400'}`}>
-                                  {item.isService ? <FileText className="w-4 h-4" /> : <Tag className="w-4 h-4" />}
-                                </div>
-                                <div>
-                                  <p className="font-bold text-slate-800">{item.name}</p>
-                                  <p className="text-[10px] text-slate-400 uppercase">{item.isService ? 'Servicio' : `${item.sku} • ${item.brand}`}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-center">
-                              <input
-                                type="number"
-                                value={item.quantity}
-                                onChange={(e) => handleOrderItemQuantityChange(idx, Number(e.target.value))}
-                                className="w-20 px-2 py-1 border border-slate-200 rounded-md text-center font-bold"
-                                min="1"
-                              />
-                            </td>
-                            <td className="px-6 py-4 text-right">${item.unitPrice.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td className="px-6 py-4 text-right font-black">${item.subtotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                            <td className="px-6 py-4 text-center">
-                              <button
-                                onClick={() => handleRemoveOrderItem(idx)}
-                                className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-
-                {orderItemsForm.length > 0 && (
-                  <div className="bg-slate-900 p-8 rounded-[2.5rem] text-white space-y-4 shadow-xl">
-                    <div className="flex justify-between items-center pt-4 border-t border-slate-800">
-                      <span className="text-xl font-black uppercase tracking-tight">TOTAL PEDIDO</span>
-                      <span className="text-4xl font-black text-orange-500">${orderFormData.total?.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                    </div>
-                  </div>
-                )}
               </section>
             </div>
 
-            <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
-              <button onClick={() => setShowOrderModal(false)} className="flex-1 py-4 bg-white border border-slate-200 rounded-2xl font-black text-slate-500 uppercase text-xs tracking-widest">Cancelar</button>
-              <button
-                onClick={handleSaveOrder}
-                disabled={isSavingOrder || !orderFormData.clientId || orderItemsForm.length === 0}
-                className="flex-1 py-4 bg-orange-600 text-white rounded-2xl font-black shadow-xl shadow-orange-600/20 hover:bg-orange-500 transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSavingOrder ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                {isSavingOrder ? 'Guardando Pedido...' : 'Guardar Pedido'}
-              </button>
+            <div className="p-8 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              <div className="text-left">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total del Pedido</p>
+                <p className="text-3xl font-black text-slate-900">${(orderFormData.total || 0).toLocaleString()}</p>
+              </div>
+              <div className="flex gap-4">
+                <button onClick={() => setShowOrderModal(false)} className="px-8 py-4 bg-white border border-slate-200 rounded-2xl font-black text-slate-500 uppercase text-xs tracking-widest">Cancelar</button>
+                <button 
+                  onClick={handleSaveOrder}
+                  disabled={isSavingOrder}
+                  className="px-8 py-4 bg-orange-600 text-white rounded-2xl font-black shadow-xl shadow-orange-600/20 hover:bg-orange-500 transition-all flex items-center justify-center gap-2 uppercase text-xs tracking-widest"
+                >
+                  {isSavingOrder ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                  {activeOrder ? 'Actualizar Pedido' : 'Crear Pedido'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

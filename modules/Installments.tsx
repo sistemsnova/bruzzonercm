@@ -59,8 +59,8 @@ const Installments: React.FC = () => {
 
   // Calculate `amountPerInstallment` and `remainingAmount`
   useEffect(() => {
-    const totalAmountAfterDownPayment = planFormData.totalAmount - planFormData.downPayment;
-    const installmentsCount = planFormData.installmentsCount > 0 ? planFormData.installmentsCount : 1;
+    const totalAmountAfterDownPayment = (planFormData.totalAmount || 0) - (planFormData.downPayment || 0);
+    const installmentsCount = planFormData.installmentsCount! > 0 ? planFormData.installmentsCount! : 1;
     const calculatedAmountPerInstallment = parseFloat((totalAmountAfterDownPayment / installmentsCount).toFixed(2));
 
     setPlanFormData(prev => ({
@@ -110,26 +110,27 @@ const Installments: React.FC = () => {
   };
 
   const handleSavePlan = async () => {
-    if (!planFormData.clientId || !planFormData.description || planFormData.totalAmount <= 0) {
+    if (!planFormData.clientId || !planFormData.description || !planFormData.totalAmount || planFormData.totalAmount <= 0) {
       alert('Por favor, selecciona un cliente, añade una descripción y un monto total.');
       return;
     }
-    setIsSavingPlan(true);
+    setIsSavingOrder(true);
     try {
+      // Fix: Ensured all required properties of InstallmentPlan are present and typed correctly
       const planToSave: Omit<InstallmentPlan, 'id'> = {
-        ...planFormData,
-        installmentsCount: Math.max(1, planFormData.installmentsCount || 1),
+        clientId: planFormData.clientId!,
+        clientName: planFormData.clientName || 'Cliente',
+        totalAmount: planFormData.totalAmount!,
         downPayment: planFormData.downPayment || 0,
+        installmentsCount: Math.max(1, planFormData.installmentsCount || 1),
+        amountPerInstallment: planFormData.amountPerInstallment || 0,
+        remainingAmount: activePlan ? activePlan.remainingAmount : (planFormData.totalAmount! - (planFormData.downPayment || 0)),
         payments: planFormData.payments || [],
-        status: planFormData.status || 'activo',
+        status: (planFormData.status as InstallmentStatus) || 'activo',
         startDate: planFormData.startDate || new Date().toISOString().split('T')[0],
-        nextDueDate: planFormData.nextDueDate || new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0],
+        nextDueDate: planFormData.nextDueDate,
+        description: planFormData.description!,
       };
-      
-      // Ensure remainingAmount is correctly calculated for a new plan initially
-      if (!activePlan) {
-        planToSave.remainingAmount = planToSave.totalAmount - planToSave.downPayment;
-      }
       
       if (activePlan) {
         await updateInstallmentPlan(activePlan.id, planToSave);
@@ -177,12 +178,13 @@ const Installments: React.FC = () => {
     try {
       const newRemaining = activePlan.remainingAmount - paymentData.amountPaid;
       const newStatus: InstallmentStatus = newRemaining <= 0 ? 'pagado' : 'activo';
-      // Fix: Added required paymentDetails property
+      
+      // Fix: Added missing required paymentDetails property to the new payment object
       const newPayment: InstallmentPayment = {
         id: `pay-${Date.now()}`,
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString(),
         amountPaid: paymentData.amountPaid,
-        method: paymentData.method as any, // Type assertion for method
+        method: paymentData.method,
         paymentDetails: [],
         notes: paymentData.notes,
       };
@@ -192,20 +194,15 @@ const Installments: React.FC = () => {
       // Update client balance
       const client = clients.find(c => c.id === activePlan.clientId);
       if (client) {
-        // Assume activePlan.totalAmount represents a positive balance in client's account, or a debt that is being reduced.
-        // If a plan means the client *owes* us, then payment *reduces* their negative balance (makes it less negative).
-        // For simplicity, let's assume `activePlan.remainingAmount` is a debt, so payment reduces it.
-        // Update the client's balance in Firebase here too.
         await updateFirebaseClientBalance(activePlan.clientId, client.balance + paymentData.amountPaid);
       }
 
       // Add a transaction record
       await addTransaction({
         amount: paymentData.amountPaid,
-        type: 'ingreso', // It's an income for the company
-        method: paymentData.method as any,
-        paymentDetails: [], // satisfy transaction requirement
-        description: `Pago de cuota #${activePlan.payments.length + 1} de plan ${activePlan.id} por ${activePlan.clientName}`,
+        type: 'ingreso',
+        paymentDetails: [],
+        description: `Pago de cuota de plan ${activePlan.id} por ${activePlan.clientName}`,
         date: new Date().toISOString()
       });
 
@@ -214,7 +211,7 @@ const Installments: React.FC = () => {
         remainingAmount: newRemaining,
         payments: updatedPayments,
         status: newStatus,
-        nextDueDate: newStatus === 'pagado' ? undefined : new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0], // Next month or undefined
+        nextDueDate: newStatus === 'pagado' ? undefined : new Date(new Date().setMonth(new Date().getMonth() + 1)).toISOString().split('T')[0],
       });
 
       alert('Pago registrado con éxito!');
@@ -230,9 +227,7 @@ const Installments: React.FC = () => {
 
   // Dummy function for client balance update (Firebase context would handle real update)
   const updateFirebaseClientBalance = async (clientId: string, newBalance: number) => {
-    // In a real Firebase setup, you would call `updateClient(clientId, { balance: newBalance })`
     console.log(`Simulating client ${clientId} balance update to: $${newBalance}`);
-    // For demo, we just update the local client object if needed, but not Firebase.
   };
 
   const filteredPlans = useMemo(() => {
@@ -318,7 +313,7 @@ const Installments: React.FC = () => {
                     key={status}
                     onClick={() => setFilterStatus(status)}
                     className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
-                      filterStatus === status ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'
+                      filterStatus === status ? 'bg-purple-600 text-white shadow-md' : 'text-slate-50 hover:bg-slate-50'
                     }`}
                   >
                     {status === 'all' ? 'Todos' : INSTALLMENT_STATUS_LABELS[status as InstallmentStatus]}
@@ -527,11 +522,11 @@ const Installments: React.FC = () => {
               <section className="bg-slate-900 p-8 rounded-[2.5rem] text-white space-y-4 shadow-xl">
                 <div className="flex justify-between items-center text-sm text-slate-400">
                   <span>Monto Restante a Financiar</span>
-                  <span>${(planFormData.totalAmount - planFormData.downPayment).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span>${((planFormData.totalAmount || 0) - (planFormData.downPayment || 0)).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
                 <div className="flex justify-between items-center pt-4 border-t border-slate-800">
                   <span className="text-xl font-black uppercase tracking-tight">MONTO POR CUOTA</span>
-                  <span className="text-4xl font-black text-orange-500">${planFormData.amountPerInstallment.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className="text-4xl font-black text-orange-500">${(planFormData.amountPerInstallment || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               </section>
 
@@ -578,7 +573,7 @@ const Installments: React.FC = () => {
               <button onClick={() => setShowPlanModal(false)} className="flex-1 py-4 bg-white border border-slate-200 rounded-2xl font-black text-slate-500 uppercase text-xs tracking-widest">Cancelar</button>
               <button
                 onClick={handleSavePlan}
-                disabled={isSavingPlan || !planFormData.clientId || !planFormData.description || planFormData.totalAmount <= 0}
+                disabled={isSavingPlan || !planFormData.clientId || !planFormData.description || !planFormData.totalAmount || planFormData.totalAmount <= 0}
                 className="flex-1 py-4 bg-purple-600 text-white rounded-2xl font-black shadow-xl shadow-purple-600/20 hover:bg-purple-500 transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSavingPlan ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
