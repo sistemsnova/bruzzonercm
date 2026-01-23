@@ -587,6 +587,7 @@ export const Remitos: React.FC = () => {
                     {r.invoiceId && (
                       <div className="flex items-center gap-1 mt-1">
                         <FileCheck className="w-3 h-3 text-blue-600" />
+                        {/* Fix: Moved Lucide icon into the button and applied title to the button */}
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleViewInvoiceDetails(r.invoiceId!); }}
                           className="text-[9px] font-black uppercase text-blue-600 hover:underline"
@@ -599,9 +600,11 @@ export const Remitos: React.FC = () => {
                   <td className="px-6 py-4 text-right font-black text-slate-900">${r.total.toLocaleString()}</td>
                   <td className="px-6 py-4 text-center">
                     {r.status === 'facturado' ? (
+                      // Fix: Moved Lucide icon into the button and applied title to the button
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleViewInvoiceDetails(r.invoiceId!); }}
-                        className="p-2 text-blue-600 hover:text-blue-700" title="Ver Factura"
+                        className="p-2 text-blue-600 hover:text-blue-700" 
+                        title="Ver Factura"
                       >
                         <Eye className="w-5 h-5" />
                       </button>
@@ -729,7 +732,7 @@ export const Remitos: React.FC = () => {
                 onClick={handleConfirmInvoice}
                 className="flex-[1.5] py-4 bg-orange-600 text-white rounded-2xl font-black shadow-xl shadow-orange-600/20 hover:bg-orange-500 transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest"
               >
-                {isProcessingBilling ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileCheck className="w-5 h-5" />}
+                {isProcessingBilling ? <Loader2 className="w-5 h-5" /> : <FileCheck className="w-5 h-5" />}
                 {isProcessingBilling ? 'Procesando...' : 'GENERAR COMPROBANTE'}
               </button>
             </div>

@@ -23,31 +23,53 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     setIsLoading(true);
     setError(null);
 
+    // Recorta espacios en blanco para asegurar una comparación precisa
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+
     try {
-      // 1. Verificar contra el Maestro
-      if (username.toLowerCase() === MASTER_USER && password === MASTER_PASS) {
+      console.log('--- Intentando iniciar sesión ---');
+      console.log(`Usuario ingresado (trimmed): '${trimmedUsername}'`);
+      console.log(`Contraseña ingresada (masked): '${trimmedPassword.replace(/./g, '*')}'`); // Mask password in console
+
+      // 1. Verificar contra el Administrador Maestro hardcodeado
+      if (trimmedUsername.toLowerCase() === MASTER_USER && trimmedPassword === MASTER_PASS) {
+        console.log('✅ Administrador Maestro detectado! Inicio de sesión exitoso.');
         onLoginSuccess('admin', 'Administrador Maestro');
-        return;
+        return; 
+      }
+      console.log('❌ Credenciales de Administrador Maestro NO coincidentes. Intentando con Firebase...');
+      
+      // Validar formato de email antes de intentar con Firebase Authentication
+      // Solo si el master user falló, entonces esperamos un email para Firebase
+      if (!trimmedUsername.includes('@') || !trimmedUsername.includes('.')) {
+          setError('El formato del usuario debe ser un correo electrónico válido para usuarios de Firebase.');
+          console.warn('⛔ Bloqueado: Usuario de Firebase requiere formato de email. Se espera "usuario@dominio.com".');
+          return;
       }
 
-      // 2. Verificar en la base de datos de usuarios internos
+      // 2. Verificar en la base de datos de usuarios internos (Firebase)
       const usersRef = collection(db, 'users');
       const q = query(usersRef, 
-        where('email', '==', username), 
-        where('password', '==', password)
+        where('email', '==', trimmedUsername), 
+        where('password', '==', trimmedPassword)
       );
       
+      console.log('🌐 Conectando a Firebase Firestore para buscar usuario...');
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
+        console.log('✅ Usuario de Firebase encontrado. Rol:', userData.role);
         onLoginSuccess(userData.role.toLowerCase() as Role, userData.name);
       } else {
         setError('Usuario o contraseña incorrectos.');
+        console.warn('⚠️ Usuario o contraseña no encontrados en Firebase.');
       }
     } catch (err: any) {
-      console.error(err);
-      setError('Error al conectar con la base de datos.');
+      console.error('🚨 Fatal Error durante el proceso de inicio de sesión:', err);
+      // Muestra el mensaje de error real de Firebase si está disponible
+      setError(`Error de conexión: ${err.message || 'No se pudo conectar a la base de datos. Verifique su conexión a Internet o la configuración de Firebase.'}`);
     } finally {
       setIsLoading(false);
     }

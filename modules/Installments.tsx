@@ -46,6 +46,7 @@ const Installments: React.FC = () => {
     nextDueDate: '',
     description: '',
   });
+  // Fix: Renamed isSavingOrder to isSavingPlan to match component context
   const [isSavingPlan, setIsSavingPlan] = useState(false);
 
   // States for registering new payment
@@ -114,7 +115,8 @@ const Installments: React.FC = () => {
       alert('Por favor, selecciona un cliente, añade una descripción y un monto total.');
       return;
     }
-    setIsSavingOrder(true);
+    // Fix: Used setIsSavingPlan instead of setIsSavingOrder
+    setIsSavingPlan(true);
     try {
       // Fix: Ensured all required properties of InstallmentPlan are present and typed correctly
       const planToSave: Omit<InstallmentPlan, 'id'> = {
@@ -143,6 +145,7 @@ const Installments: React.FC = () => {
       console.error('Error al guardar el plan de cuotas:', error);
       alert('Ocurrió un error al guardar el plan de cuotas.');
     } finally {
+      // Fix: Used setIsSavingPlan instead of setIsSavingOrder
       setIsSavingPlan(false);
     }
   };
@@ -185,7 +188,7 @@ const Installments: React.FC = () => {
         date: new Date().toISOString(),
         amountPaid: paymentData.amountPaid,
         method: paymentData.method,
-        paymentDetails: [],
+        paymentDetails: [], // This could be enriched with actual payment method details if needed
         notes: paymentData.notes,
       };
 

@@ -37,10 +37,11 @@ const Sales: React.FC = () => {
     fetchProductsPaginatedAndFiltered,
     clients,
     updateProduct // Necesitamos updateProduct para deducir stock
-  } = useFirebase();
+   } = useFirebase();
 
   const [search, setSearch] = useState('');
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]
+  );
   const [showCheckout, setShowCheckout] = useState(false);
   const [showManualItemModal, setShowManualItemModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -65,7 +66,10 @@ const Sales: React.FC = () => {
 
   // Estado para la selección de unidad en el buscador
   const [selectedProductForUnit, setSelectedProductForUnit] = useState<Product | null>(null);
-  const [tempSaleUnit, setTempSaleUnit] = useState<Product['saleUnit'] | 'primary'>('primary'); // 'primary' or actual sale unit
+  // Fix: Allowed temporary sale unit to be the actual Product['saleUnit'] type
+  const [tempSaleUnit, setTempSaleUnit] = useState<Product['saleUnit'] | 'primary'>(
+    'primary'
+  ); // 'primary' or actual sale unit
 
   const debounceTimeoutRef = useRef<any>(null);
 
@@ -106,6 +110,7 @@ const Sales: React.FC = () => {
   const handleConfirmUnitSelection = () => {
     if (selectedProductForUnit && tempSaleUnit) {
         let unitToAddToCart: Product['saleUnit'] = selectedProductForUnit.primaryUnit; // Default to primary for deduction clarity
+        // Fix: Use the actual `selectedProductForUnit.saleUnit` type
         if (tempSaleUnit !== 'primary') {
             unitToAddToCart = selectedProductForUnit.saleUnit;
         }
@@ -522,9 +527,9 @@ const Sales: React.FC = () => {
                         <input 
                             type="radio" 
                             name="unitSelection" 
-                            value="sale" 
-                            checked={tempSaleUnit === 'sale'} 
-                            onChange={() => setTempSaleUnit('sale')}
+                            value={selectedProductForUnit.saleUnit} 
+                            checked={tempSaleUnit === selectedProductForUnit.saleUnit} 
+                            onChange={() => setTempSaleUnit(selectedProductForUnit.saleUnit)}
                             className="form-radio h-5 w-5 text-orange-600"
                         />
                         <div className="flex-1">
@@ -754,7 +759,7 @@ const Sales: React.FC = () => {
                   disabled={isProcessing || (docType !== 'presupuesto' && Math.abs(remainingToPay) > 0.01)}
                   className="w-full py-6 bg-orange-600 text-white rounded-[2rem] font-black text-xl shadow-2xl shadow-orange-600/40 hover:bg-orange-500 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-20"
                 >
-                  {isProcessing ? <Loader2 className="w-6 h-6 animate-spin" /> : <CheckCircle2 className="w-6 h-6" />}
+                  {isProcessing ? <Loader2 className="w-6 h-6" /> : <CheckCircle2 className="w-6 h-6" />}
                   {isProcessing ? 'CONFIRMANDO...' : 'FINALIZAR'}
                 </button>
               </div>

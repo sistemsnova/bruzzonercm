@@ -193,6 +193,17 @@ export interface AndreaniConfig {
   nickname?: string;
 }
 
+export interface SupplierAutomationConfig {
+  supplierId: string;
+  sourceType: 'manual' | 'web' | 'email';
+  url?: string;
+  emailSource?: string;
+  enabled: boolean;
+  lastRun?: string;
+  lastRunStatus?: 'success' | 'error';
+  lastRunMessage?: string;
+}
+
 // Added missing interfaces for AI Extraction, Quotes and Remitos modules
 export interface ExtractedQuoteItem {
   productName: string;

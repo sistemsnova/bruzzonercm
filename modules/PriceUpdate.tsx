@@ -1,17 +1,36 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Upload, FileSpreadsheet, Play, CheckCircle2, AlertCircle, 
   FileText, ChevronRight, Settings, Plus, LayoutGrid, 
   ListOrdered, Percent, ArrowDownUp, Edit3, Trash2, X,
-  Save, Info, Tags, RefreshCcw
+  Save, Info, Tags, RefreshCcw, Cloud, Mail, Globe, Clock,
+  Loader2, History, Eye
 } from 'lucide-react';
-import { PriceList } from '../types';
+import { PriceList, Supplier } from '../types'; // Import Supplier type
 import { useFirebase } from '../context/FirebaseContext';
+import { SupplierAutomationConfig } from '../types'; // Import SupplierAutomationConfig
+
+type AutomationFrequency = 'diario' | 'semanal' | 'mensual';
+type DataSourceType = 'manual' | 'web' | 'email';
+
+// Fix: Defined the missing 'AutomationConfig' interface
+interface AutomationConfig {
+  enabled: boolean;
+  frequency: AutomationFrequency;
+  executionTime: string; // e.g., "03:00"
+}
+
+// Mock data for automation history
+const mockAutomationHistory = [
+  { id: 'h1', date: '2024-05-20 08:00', source: 'Sinteplast (Web)', status: 'success', itemsUpdated: 120, itemsAdded: 5, errors: 0, log: 'Proceso completado sin errores.' },
+  { id: 'h2', date: '2024-05-19 23:00', source: 'Alba (Email)', status: 'error', itemsUpdated: 0, itemsAdded: 0, errors: 2, log: 'Error: Adjunto no reconocido o malformado.' },
+  { id: 'h3', date: '2024-05-18 08:00', source: 'Stanley (Web)', status: 'success', itemsUpdated: 85, itemsAdded: 0, errors: 0, log: 'Proceso completado sin errores.' },
+];
 
 const PriceUpdate: React.FC = () => {
-  const { priceLists, addPriceList, updatePriceList, deletePriceList } = useFirebase(); // Use Firebase context
-  const [activeTab, setActiveTab] = useState<'update' | 'lists'>('lists'); // Default to lists for initial user interaction
+  const { priceLists, addPriceList, updatePriceList, deletePriceList, suppliers } = useFirebase(); // Use Firebase context
+  const [activeTab, setActiveTab] = useState<'update' | 'lists' | 'automation'>('lists'); // Default to lists for initial user interaction
   const [step, setStep] = useState(1);
   const [selectedSupplier, setSelectedSupplier] = useState('');
   const [showListModal, setShowListModal] = useState(false);
@@ -24,6 +43,34 @@ const PriceUpdate: React.FC = () => {
     value: 0,
     isBase: false
   });
+
+  // Automation states
+  const [automationConfig, setAutomationConfig] = useState<AutomationConfig>({
+    enabled: false,
+    frequency: 'diario',
+    executionTime: '03:00',
+  });
+  const [supplierAutomationConfigs, setSupplierAutomationConfigs] = useState<Record<string, SupplierAutomationConfig>>({});
+  const [isSavingAutomation, setIsSavingAutomation] = useState(false);
+  const [isTriggeringManual, setIsTriggeringManual] = useState<string | null>(null);
+
+  // Initialize supplier automation configs from fetched suppliers
+  useEffect(() => {
+    if (suppliers.length > 0) {
+      const initialConfigs: Record<string, SupplierAutomationConfig> = {};
+      suppliers.forEach(supplier => {
+        if (!supplierAutomationConfigs[supplier.id]) { // Only add if not already configured
+          // Fix: Ensure supplierId is always present when initializing SupplierAutomationConfig
+          initialConfigs[supplier.id] = {
+            supplierId: supplier.id, // Added missing supplierId
+            sourceType: 'manual',
+            enabled: false,
+          };
+        }
+      });
+      setSupplierAutomationConfigs(prev => ({ ...prev, ...initialConfigs }));
+    }
+  }, [suppliers, supplierAutomationConfigs]); // Depend on suppliers array
 
   const steps = [
     { id: 1, name: 'Seleccionar Proveedor', icon: FileText },
@@ -87,6 +134,42 @@ const PriceUpdate: React.FC = () => {
     setShowListModal(true);
   };
 
+  const handleSaveAutomationConfig = () => {
+    setIsSavingAutomation(true);
+    setTimeout(() => {
+      alert('Configuración de automatización guardada.');
+      setIsSavingAutomation(false);
+    }, 1000);
+  };
+
+  const handleSupplierAutomationConfigChange = (supplierId: string, field: keyof SupplierAutomationConfig, value: any) => {
+    setSupplierAutomationConfigs(prev => ({
+      ...prev,
+      [supplierId]: {
+        ...prev[supplierId],
+        [field]: value,
+      },
+    }));
+  };
+
+  const handleTriggerManualUpdate = (supplierId: string) => {
+    setIsTriggeringManual(supplierId);
+    setTimeout(() => {
+      alert(`Actualización manual disparada para ${suppliers.find(s => s.id === supplierId)?.name || 'proveedor'}.`);
+      // Simulate update status
+      setSupplierAutomationConfigs(prev => ({
+        ...prev,
+        [supplierId]: {
+          ...prev[supplierId],
+          lastRun: new Date().toLocaleString(),
+          lastRunStatus: Math.random() > 0.2 ? 'success' : 'error', // 80% success rate
+          lastRunMessage: Math.random() > 0.2 ? 'Proceso completado.' : 'Error: Contactar soporte.',
+        },
+      }));
+      setIsTriggeringManual(null);
+    }, 2000);
+  };
+
   const renderUpdateProcess = () => {
     switch(step) {
       case 1:
@@ -94,25 +177,30 @@ const PriceUpdate: React.FC = () => {
           <div className="space-y-6">
             <h3 className="text-xl font-bold text-slate-800">1. ¿Qué proveedor quieres actualizar?</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {['Sinteplast', 'Alba', 'Stanley', 'Bosch', 'Tramontina', 'Ferrum'].map(s => (
+              {suppliers.map(s => ( // Use actual suppliers from Firebase
                 <button 
-                  key={s} 
-                  onClick={() => { setSelectedSupplier(s); setStep(2); }}
+                  key={s.id} 
+                  onClick={() => { setSelectedSupplier(s.id); setStep(2); }}
                   className="p-6 bg-white border border-slate-200 rounded-2xl hover:border-orange-500 hover:shadow-lg transition-all text-center group"
                 >
                   <div className="w-12 h-12 bg-slate-50 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-orange-50">
                     <FileText className="w-6 h-6 text-slate-400 group-hover:text-orange-500" />
                   </div>
-                  <span className="font-bold text-slate-700">{s}</span>
+                  <span className="font-bold text-slate-700">{s.name}</span>
                 </button>
               ))}
+              {suppliers.length === 0 && (
+                <div className="col-span-full text-center p-10 text-slate-400 italic">
+                  No hay proveedores cargados.
+                </div>
+              )}
             </div>
           </div>
         );
       case 2:
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-bold text-slate-800">2. Mapeo de Columnas: {selectedSupplier}</h3>
+            <h3 className="text-xl font-bold text-slate-800">2. Mapeo de Columnas: {suppliers.find(s => s.id === selectedSupplier)?.name || 'Proveedor'}</h3>
             <div className="bg-white p-8 rounded-2xl border border-slate-100 space-y-6">
               <div className="grid grid-cols-3 gap-8">
                 <div className="space-y-2">
@@ -309,6 +397,242 @@ const PriceUpdate: React.FC = () => {
     </div>
   );
 
+  const renderAutomationTab = () => (
+    <div className="space-y-8">
+      <section className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8 animate-in fade-in duration-300">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-blue-500 text-white rounded-2xl shadow-lg shadow-blue-500/20">
+            <Cloud className="w-6 h-6" />
+          </div>
+          <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight">Configuración General de Automatización</h3>
+        </div>
+
+        <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex items-start gap-4">
+          <label htmlFor="enableAutomation" className="relative inline-flex items-center cursor-pointer">
+            <input 
+              type="checkbox" 
+              id="enableAutomation"
+              checked={automationConfig.enabled}
+              onChange={(e) => setAutomationConfig(prev => ({ ...prev, enabled: e.target.checked }))}
+              className="sr-only peer" 
+            />
+            <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+          </label>
+          <label htmlFor="enableAutomation" className="flex-1 cursor-pointer">
+            <p className="text-sm font-black text-slate-800 uppercase">Habilitar Procesamiento Automático</p>
+            <p className="text-xs text-slate-500 mt-1">Activa las tareas programadas para actualizar precios de forma recurrente.</p>
+          </label>
+        </div>
+
+        {automationConfig.enabled && (
+          <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100 animate-in fade-in duration-300">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Frecuencia de Ejecución</label>
+              <select 
+                value={automationConfig.frequency}
+                onChange={(e) => setAutomationConfig(prev => ({ ...prev, frequency: e.target.value as AutomationFrequency }))}
+                className="w-full px-5 py-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold bg-white"
+              >
+                <option value="diario">Diario</option>
+                <option value="semanal">Semanal</option>
+                <option value="mensual">Mensual</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Horario de Ejecución (Hora Argentina)</label>
+              <input 
+                type="time" 
+                value={automationConfig.executionTime}
+                onChange={(e) => setAutomationConfig(prev => ({ ...prev, executionTime: e.target.value }))}
+                className="w-full px-5 py-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold bg-white"
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="pt-6 border-t border-slate-100 flex justify-end">
+          <button 
+            onClick={handleSaveAutomationConfig}
+            disabled={isSavingAutomation}
+            className="px-8 py-3 bg-blue-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-blue-600/20 hover:bg-blue-500 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {isSavingAutomation ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {isSavingAutomation ? 'Guardando...' : 'Guardar Configuración General'}
+          </button>
+        </div>
+      </section>
+
+      <section className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8 animate-in fade-in duration-500">
+        <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
+          <Tags className="w-6 h-6 text-orange-600" /> Fuentes por Proveedor
+        </h3>
+        <p className="text-slate-500 text-sm">Configura cómo se obtendrán las listas de precios de cada uno de tus proveedores.</p>
+
+        <div className="space-y-6">
+          {suppliers.length === 0 ? (
+            <div className="text-center p-10 text-slate-400 italic">
+              No hay proveedores cargados para configurar.
+            </div>
+          ) : (
+            suppliers.map(supplier => {
+              // Cast the config to SupplierAutomationConfig to access its properties safely
+              const config: SupplierAutomationConfig = supplierAutomationConfigs[supplier.id] || { supplierId: supplier.id, sourceType: 'manual', enabled: false };
+              return (
+                <div key={supplier.id} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 space-y-4 group">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-lg font-black text-slate-800">{supplier.name}</h4>
+                    <div className="flex items-center gap-2">
+                       <span className={`text-[9px] font-black px-2 py-1 rounded-full uppercase ${config.lastRunStatus === 'success' ? 'bg-green-50 text-green-700' : config.lastRunStatus === 'error' ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-400'}`}>
+                          {config.lastRun ? `${config.lastRunStatus === 'success' ? 'Éxito' : 'Error'}` : 'Sin Ejecución'}
+                       </span>
+                       <button 
+                        onClick={() => handleTriggerManualUpdate(supplier.id)}
+                        disabled={isTriggeringManual === supplier.id}
+                        className="px-4 py-2 bg-orange-600 text-white rounded-xl text-xs font-black uppercase flex items-center gap-2 shadow-lg hover:bg-orange-500 disabled:opacity-50"
+                       >
+                         {isTriggeringManual === supplier.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCcw className="w-4 h-4" />}
+                         Actualizar Ahora
+                       </button>
+                    </div>
+                  </div>
+                  
+                  {config.lastRun && config.lastRunStatus === 'error' && (
+                     <div className="bg-red-100 text-red-800 text-xs p-3 rounded-xl flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Última ejecución ({config.lastRun}): {config.lastRunMessage}</span>
+                     </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fuente Principal</label>
+                      <select
+                        value={config.sourceType}
+                        onChange={(e) => handleSupplierAutomationConfigChange(supplier.id, 'sourceType', e.target.value as DataSourceType)}
+                        className="w-full px-5 py-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold bg-white"
+                      >
+                        <option value="manual">Manual (Excel)</option>
+                        <option value="web">Web (Scraping)</option>
+                        <option value="email">Email (Adjunto)</option>
+                      </select>
+                    </div>
+
+                    {config.sourceType === 'web' && (
+                      <div className="space-y-2 animate-in fade-in duration-200">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
+                          <Globe className="w-3 h-3" /> URL del Proveedor
+                        </label>
+                        <input
+                          type="url"
+                          value={config.url || ''}
+                          onChange={(e) => handleSupplierAutomationConfigChange(supplier.id, 'url', e.target.value)}
+                          placeholder="https://proveedor.com/listaprecios"
+                          className="w-full px-5 py-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold"
+                        />
+                      </div>
+                    )}
+                    {config.sourceType === 'email' && (
+                      <div className="space-y-2 animate-in fade-in duration-200">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center gap-1">
+                          <Mail className="w-3 h-3" /> Email de Origen
+                        </label>
+                        <input
+                          type="email"
+                          value={config.emailSource || ''}
+                          onChange={(e) => handleSupplierAutomationConfigChange(supplier.id, 'emailSource', e.target.value)}
+                          placeholder="listaprecios@proveedor.com"
+                          className="w-full px-5 py-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none font-bold"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-100">
+                    <label htmlFor={`enable-${supplier.id}`} className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        id={`enable-${supplier.id}`}
+                        checked={config.enabled}
+                        onChange={(e) => handleSupplierAutomationConfigChange(supplier.id, 'enabled', e.target.checked)}
+                        className="sr-only peer" 
+                      />
+                      <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-orange-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                    </label>
+                    <label htmlFor={`enable-${supplier.id}`} className="flex-1 cursor-pointer">
+                      <p className="text-sm font-black text-slate-800 uppercase">Activar Fuente Automática</p>
+                      <p className="text-xs text-slate-500 mt-1">Esta fuente se procesará automáticamente según la configuración general.</p>
+                    </label>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                    <button 
+                      onClick={() => alert('Se abriría una interfaz para configurar el mapeo de columnas/campos de esta fuente.')}
+                      className="px-6 py-2 bg-slate-100 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center gap-2"
+                    >
+                      <Settings className="w-4 h-4" /> Editar Mapeo de Campos
+                    </button>
+                    <button 
+                      onClick={() => alert('Configuración guardada para ' + supplier.name)}
+                      className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center gap-2"
+                    >
+                      <Save className="w-4 h-4 text-orange-500" /> Guardar
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </section>
+
+      <section className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-8 animate-in fade-in duration-500">
+        <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight flex items-center gap-3">
+          <History className="w-6 h-6 text-purple-600" /> Historial de Procesos Automáticos
+        </h3>
+        <p className="text-slate-500 text-sm">Consulta el resultado de las últimas ejecuciones automáticas de precios.</p>
+
+        <div className="border border-slate-100 rounded-[1.5rem] overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
+              <tr>
+                <th className="px-6 py-3 text-left">Fecha/Hora</th>
+                <th className="px-6 py-3 text-left">Fuente</th>
+                <th className="px-6 py-3 text-center">Estado</th>
+                <th className="px-6 py-3 text-center">Items Act.</th>
+                <th className="px-6 py-3 text-center">Errores</th>
+                <th className="px-6 py-3 text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {mockAutomationHistory.map((entry) => (
+                <tr key={entry.id} className="text-sm hover:bg-slate-50/50 transition-colors">
+                  <td className="px-6 py-4 font-bold text-slate-800">{entry.date}</td>
+                  <td className="px-6 py-4 text-slate-700">{entry.source}</td>
+                  <td className="px-6 py-4 text-center">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${entry.status === 'success' ? 'bg-green-50 text-green-700 border-green-100' : entry.status === 'error' ? 'bg-red-50 text-red-700 border-red-100' : 'bg-slate-100 text-slate-400'}`}>
+                      {entry.status === 'success' ? 'Éxito' : 'Fallo'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center text-slate-700">{entry.itemsUpdated} / {entry.itemsAdded}</td>
+                  <td className="px-6 py-4 text-center text-red-600 font-bold">{entry.errors}</td>
+                  <td className="px-6 py-4 text-center">
+                    <button
+                      onClick={() => alert(`Log detallado para ${entry.source}:\n${entry.log}`)}
+                      className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                      title="Ver Log"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <header className="flex justify-between items-end">
@@ -318,10 +642,10 @@ const PriceUpdate: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex gap-4 border-b border-slate-200">
+      <div className="flex gap-4 border-b border-slate-200 overflow-x-auto custom-scrollbar">
         <button
           onClick={() => setActiveTab('update')}
-          className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all border-b-2 ${
+          className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${
             activeTab === 'update' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
@@ -329,11 +653,19 @@ const PriceUpdate: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('lists')}
-          className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all border-b-2 ${
+          className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${
             activeTab === 'lists' ? 'border-orange-500 text-orange-600' : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           <Tags className="w-5 h-5" /> Gestión de Listas de Venta
+        </button>
+        <button
+          onClick={() => setActiveTab('automation')}
+          className={`flex items-center gap-2 px-6 py-4 text-sm font-bold transition-all border-b-2 whitespace-nowrap ${
+            activeTab === 'automation' ? 'border-blue-500 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Cloud className="w-5 h-5" /> Automatización & Fuentes
         </button>
       </div>
 
@@ -350,17 +682,24 @@ const PriceUpdate: React.FC = () => {
               {i < steps.length - 1 && <ChevronRight className="w-5 h-5 text-slate-100" />}
             </React.Fragment>
           ))
-        ) : (
+        ) : activeTab === 'lists' ? (
           <div className="flex items-center gap-3 text-orange-600">
             <div className="w-10 h-10 rounded-full border-2 border-orange-500 bg-orange-50 flex items-center justify-center">
               <Settings className="w-5 h-5" />
             </div>
             <span className="text-xs font-black uppercase tracking-widest">Definición de Políticas de Precios</span>
           </div>
+        ) : ( // Automation Tab
+          <div className="flex items-center gap-3 text-blue-600">
+            <div className="w-10 h-10 rounded-full border-2 border-blue-500 bg-blue-50 flex items-center justify-center">
+              <Cloud className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-black uppercase tracking-widest">Configuración de Fuentes Automáticas</span>
+          </div>
         )}
       </div>
 
-      {activeTab === 'update' ? renderUpdateProcess() : renderListsManagement()}
+      {activeTab === 'update' ? renderUpdateProcess() : activeTab === 'lists' ? renderListsManagement() : renderAutomationTab()}
 
       {/* Modal: Nueva Lista de Precio */}
       {showListModal && (
