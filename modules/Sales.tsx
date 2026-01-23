@@ -15,15 +15,17 @@ import { useFirebase } from '../context/FirebaseContext';
 import { Product, Client, PaymentDetail, SaleItem, Sale } from '../types'; // Import Sale and SaleItem
 
 interface CartItem { // This is an internal UI type, not directly stored as SaleItem
-  id: string;
+  id: string; // Product ID
   sku: string;
   name: string;
   brand: string;
-  price: number;
-  quantity: number;
+  price: number; // Price per SELECTED unit
+  quantity: number; // Quantity in SELECTED unit
   stockBeforeSale: number; 
   isManual?: boolean;
-  selectedSaleUnit?: Product['saleUnit'];
+  primaryUnit: Product['primaryUnit']; // Keep track of primary unit for stock deduction
+  selectedSaleUnit: Product['saleUnit']; // The unit the user selected to sell in
+  saleUnitConversionFactor?: number; // The factor for this specific product
 }
 
 type SaleDocType = 'ticket' | 'factura_a' | 'factura_b' | 'remito' | 'presupuesto';
@@ -33,7 +35,8 @@ const Sales: React.FC = () => {
     addSale,
     addOrder,
     fetchProductsPaginatedAndFiltered,
-    clients
+    clients,
+    updateProduct // Necesitamos updateProduct para deducir stock
   } = useFirebase();
 
   const [search, setSearch] = useState('');
@@ -60,12 +63,19 @@ const Sales: React.FC = () => {
   const [searchableProducts, setSearchableProducts] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
+  // Estado para la selección de unidad en el buscador
+  const [selectedProductForUnit, setSelectedProductForUnit] = useState<Product | null>(null);
+  const [tempSaleUnit, setTempSaleUnit] = useState<Product['saleUnit'] | 'primary'>('primary'); // 'primary' or actual sale unit
+
   const debounceTimeoutRef = useRef<any>(null);
 
   const debouncedSearchProducts = useCallback((value: string) => {
     if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
     debounceTimeoutRef.current = setTimeout(async () => {
-      if (value.length < 2) return;
+      if (value.length < 2) {
+        setSearchableProducts([]);
+        return;
+      }
       setIsSearching(true);
       try {
         const { products } = await fetchProductsPaginatedAndFiltered({
@@ -81,19 +91,59 @@ const Sales: React.FC = () => {
     }, 300);
   }, [fetchProductsPaginatedAndFiltered]);
 
-  const addToCart = (product: Product) => {
-    const existing = cart.find(item => item.id === product.id);
-    if (existing) {
-      setCart(cart.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
+  const handleProductSelectionInSearch = (product: Product) => {
+    if (product.isFractionable && product.saleUnitConversionFactor && product.saleUnit !== product.primaryUnit) {
+        // Show unit selection UI
+        setSelectedProductForUnit(product);
+        setTempSaleUnit('primary'); // Default to primary unit for selection
+    } else {
+        // Add directly if not fractionable or units are the same
+        addToCart(product, product.primaryUnit);
+        setSelectedProductForUnit(null); // Clear selection UI
+    }
+  };
+
+  const handleConfirmUnitSelection = () => {
+    if (selectedProductForUnit && tempSaleUnit) {
+        let unitToAddToCart: Product['saleUnit'] = selectedProductForUnit.primaryUnit; // Default to primary for deduction clarity
+        if (tempSaleUnit !== 'primary') {
+            unitToAddToCart = selectedProductForUnit.saleUnit;
+        }
+        addToCart(selectedProductForUnit, unitToAddToCart);
+        setSelectedProductForUnit(null); // Clear modal/selection UI
+        setTempSaleUnit('primary'); // Reset temp unit
+    }
+  };
+
+  const addToCart = (product: Product, unitToSell: Product['saleUnit']) => {
+    let pricePerSelectedUnit = product.salePrice; // Default to primary unit price
+    let conversionFactor = 1; // Default no conversion
+
+    if (unitToSell === product.saleUnit && product.isFractionable && product.saleUnitConversionFactor) {
+        pricePerSelectedUnit = product.salePrice * product.saleUnitConversionFactor;
+        conversionFactor = product.saleUnitConversionFactor;
+    }
+
+    const existingIndex = cart.findIndex(item => item.id === product.id && item.selectedSaleUnit === unitToSell);
+    if (existingIndex !== -1) {
+      setCart(cart.map((item, idx) => idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item));
     } else {
       setCart([...cart, { 
-        id: product.id, sku: product.sku, name: product.name, brand: product.brand,
-        price: product.salePrice, quantity: 1, stockBeforeSale: product.stock,
-        selectedSaleUnit: product.saleUnit
+        id: product.id, 
+        sku: product.sku, 
+        name: product.name, 
+        brand: product.brand,
+        price: parseFloat(pricePerSelectedUnit.toFixed(2)), // Store calculated price
+        quantity: 1, 
+        stockBeforeSale: product.stock,
+        primaryUnit: product.primaryUnit, // Store primary unit
+        selectedSaleUnit: unitToSell, // Store selected sale unit
+        saleUnitConversionFactor: conversionFactor, // Store factor for deduction
       }]);
     }
     setSearch('');
     setSearchableProducts([]);
+    setSelectedProductForUnit(null); // Clear any unit selection UI
   };
 
   const addManualItemToCart = () => {
@@ -106,7 +156,10 @@ const Sales: React.FC = () => {
       price: manualItem.price,
       quantity: manualItem.quantity,
       stockBeforeSale: 9999,
-      isManual: true
+      isManual: true,
+      primaryUnit: 'unidad', // Default for manual items
+      selectedSaleUnit: 'unidad', // Default for manual items
+      saleUnitConversionFactor: 1,
     };
     setCart([...cart, newItem]);
     setShowManualItemModal(false);
@@ -147,20 +200,36 @@ const Sales: React.FC = () => {
 
     setIsProcessing(true);
     try {
-      // Map CartItem to SaleItem
-      const saleItems: SaleItem[] = cart.map(item => ({
-        id: item.id,
-        sku: item.sku,
-        name: item.name,
-        brand: item.brand,
-        price: item.price,
-        quantity: item.quantity,
-        subtotal: item.price * item.quantity,
-        isManual: item.isManual,
-        selectedSaleUnit: item.selectedSaleUnit,
-      }));
+      const saleItems: SaleItem[] = [];
+      const productUpdates: Promise<void>[] = [];
 
-      // Sale data structure conforming to the new Sale interface
+      for (const item of cart) {
+        saleItems.push({
+          id: item.id,
+          sku: item.sku,
+          name: item.name,
+          brand: item.brand,
+          price: item.price,
+          quantity: item.quantity,
+          subtotal: parseFloat((item.price * item.quantity).toFixed(2)),
+          isManual: item.isManual,
+          selectedSaleUnit: item.selectedSaleUnit,
+        });
+
+        // Deduct stock if it's not a manual item and not a quote
+        if (!item.isManual && docType !== 'presupuesto') {
+          // Convert sold quantity back to primary unit for stock deduction
+          const quantityToDeductInPrimaryUnit = item.quantity * item.saleUnitConversionFactor!;
+          
+          productUpdates.push(updateProduct(item.id, { 
+            stock: item.stockBeforeSale - quantityToDeductInPrimaryUnit 
+          }));
+        }
+      }
+
+      // Wait for all product stock updates to complete
+      await Promise.all(productUpdates);
+
       const saleData: Omit<Sale, 'id'> = {
         clientName: selectedClient?.name || 'Mostrador',
         clientId: selectedClient?.id || null,
@@ -171,7 +240,7 @@ const Sales: React.FC = () => {
         date: new Date().toISOString(),
         status: docType === 'presupuesto' ? 'pendiente' : 'completado',
         seller: 'Vendedor Demo', // Placeholder for actual user's name
-        remitoIds: [], // Direct sales usually don't originate from remitos.
+        remitoIds: [], 
       };
 
       if (docType === 'presupuesto') {
@@ -186,7 +255,8 @@ const Sales: React.FC = () => {
             quantity: i.quantity, 
             unitPrice: i.price, 
             subtotal: i.price * i.quantity, 
-            originalProduct: null 
+            originalProduct: null,
+            selectedSaleUnit: i.selectedSaleUnit // Keep selected unit in order item
           })),
           total: totalCartAmount,
           status: 'pendiente_preparacion',
@@ -194,7 +264,7 @@ const Sales: React.FC = () => {
         });
         alert("Presupuesto guardado con éxito.");
       } else {
-        await addSale(saleData); // Use the updated addSale
+        await addSale(saleData); 
         alert(`Operación "${docType.toUpperCase()}" finalizada con éxito.`);
       }
 
@@ -251,7 +321,7 @@ const Sales: React.FC = () => {
               {searchableProducts.map(p => (
                 <div 
                   key={p.id} 
-                  onClick={() => addToCart(p)}
+                  onClick={() => handleProductSelectionInSearch(p)}
                   className="p-4 bg-white border border-slate-100 rounded-2xl flex items-center gap-4 hover:border-orange-300 hover:bg-orange-50/30 transition-all cursor-pointer group"
                 >
                   <div className="w-14 h-14 bg-slate-50 rounded-xl flex items-center justify-center border border-slate-100 shrink-0">
@@ -259,9 +329,9 @@ const Sales: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-slate-800 truncate">{p.name}</p>
-                    <p className="text-[10px] font-black text-slate-400 uppercase">{p.sku} • Stock: <span className={p.stock < 5 ? 'text-red-500' : 'text-green-600'}>{p.stock}</span></p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase">{p.sku} • Stock: <span className={p.stock < (p.reorderPoint || 0) ? 'text-red-500' : 'text-green-600'}>{p.stock} {p.primaryUnit}</span></p>
                   </div>
-                  <p className="text-lg font-black text-slate-900">${p.salePrice.toLocaleString()}</p>
+                  <p className="text-lg font-black text-slate-900">${p.salePrice.toLocaleString()} / {p.primaryUnit}</p>
                 </div>
               ))}
               {!isSearching && search.length > 2 && searchableProducts.length === 0 && (
@@ -373,7 +443,7 @@ const Sales: React.FC = () => {
               </div>
             ) : (
               cart.map((item, idx) => (
-                <div key={item.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between group">
+                <div key={`${item.id}-${item.selectedSaleUnit}`} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between group">
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-slate-800 truncate">{item.name}</p>
                     <div className="flex items-center gap-3">
@@ -381,12 +451,13 @@ const Sales: React.FC = () => {
                         type="number" 
                         value={item.quantity} 
                         onChange={(e) => {
-                          const q = parseInt(e.target.value) || 1;
+                          const q = parseFloat(e.target.value) || 0; // Allow fractional quantity
                           setCart(cart.map((c, i) => i === idx ? { ...c, quantity: q } : c));
                         }}
-                        className="w-12 bg-transparent font-black text-orange-600 outline-none"
+                        className="w-20 bg-transparent font-black text-orange-600 outline-none"
+                        step="0.01" // Allow decimal input
                       />
-                      <span className="text-[10px] text-slate-400 font-bold uppercase">x ${item.price.toLocaleString()}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase">x ${item.price.toLocaleString()} /{item.selectedSaleUnit}</span>
                     </div>
                   </div>
                   <div className="flex flex-col items-end justify-between">
@@ -413,6 +484,77 @@ const Sales: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal: Unit Selection for Fractionable Products */}
+      {selectedProductForUnit && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[130] flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-sm rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+            <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-orange-50">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-orange-600 text-white rounded-xl flex items-center justify-center">
+                        <Scale className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-black text-slate-900">Seleccionar Unidad</h2>
+                        <p className="text-sm font-medium text-orange-700">{selectedProductForUnit.name}</p>
+                    </div>
+                </div>
+                <button onClick={() => setSelectedProductForUnit(null)} className="p-2 hover:bg-white rounded-xl text-slate-400"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">¿En qué unidad deseas vender?</p>
+                <div className="space-y-3">
+                    <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 cursor-pointer">
+                        <input 
+                            type="radio" 
+                            name="unitSelection" 
+                            value="primary" 
+                            checked={tempSaleUnit === 'primary'} 
+                            onChange={() => setTempSaleUnit('primary')}
+                            className="form-radio h-5 w-5 text-orange-600"
+                        />
+                        <div className="flex-1">
+                            <p className="font-bold text-slate-800 text-sm">{selectedProductForUnit.primaryUnit} (Stock)</p>
+                            <p className="text-xs text-slate-500">${selectedProductForUnit.salePrice.toLocaleString()} / {selectedProductForUnit.primaryUnit}</p>
+                        </div>
+                    </label>
+                    <label className="flex items-center gap-3 p-4 bg-orange-50 rounded-2xl border border-orange-200 cursor-pointer">
+                        <input 
+                            type="radio" 
+                            name="unitSelection" 
+                            value="sale" 
+                            checked={tempSaleUnit === 'sale'} 
+                            onChange={() => setTempSaleUnit('sale')}
+                            className="form-radio h-5 w-5 text-orange-600"
+                        />
+                        <div className="flex-1">
+                            <p className="font-bold text-orange-900 text-sm">{selectedProductForUnit.saleUnit} (Fraccionado)</p>
+                            <p className="text-xs text-orange-700">
+                                ${((selectedProductForUnit.salePrice || 0) * (selectedProductForUnit.saleUnitConversionFactor || 1)).toLocaleString()} / {selectedProductForUnit.saleUnit}
+                                <span className="ml-1 text-slate-500 text-[10px] italic"> (1 {selectedProductForUnit.saleUnit} = {selectedProductForUnit.saleUnitConversionFactor} {selectedProductForUnit.primaryUnit})</span>
+                            </p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+                <button 
+                    onClick={() => setSelectedProductForUnit(null)} 
+                    className="flex-1 py-3 bg-white border border-slate-200 rounded-xl font-black text-slate-500 uppercase text-xs"
+                >
+                    Cancelar
+                </button>
+                <button 
+                    onClick={handleConfirmUnitSelection} 
+                    className="flex-1 py-3 bg-orange-600 text-white rounded-xl font-black shadow-lg hover:bg-orange-500 uppercase text-xs"
+                >
+                    Confirmar
+                </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Modal: Checkout */}
       {showCheckout && (

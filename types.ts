@@ -43,8 +43,8 @@ export interface Product {
   name: string;
   supplierId?: string;
   costPrice: number;
-  salePrice: number; 
-  stock: number; 
+  salePrice: number; // Price per primaryUnit
+  stock: number; // Stock in primaryUnit
   category: string;
   brand: string;
   reorderPoint?: number;
@@ -56,15 +56,14 @@ export interface Product {
   minStock?: number;
   location?: string;
   imageUrl?: string;
-  primaryUnit: 'unidad' | 'm2' | 'kg' | 'litro' | 'pie' | 'cm' | 'metro_lineal'; 
+  primaryUnit: 'unidad' | 'm2' | 'kg' | 'litro' | 'pie' | 'cm' | 'metro_lineal' | 'tabla' | 'caja' | 'barra'; 
   saleUnit: 'unidad' | 'm2' | 'kg' | 'litro' | 'tabla' | 'caja' | 'barra' | 'metro_lineal' | 'pie' | 'cm';
-  saleUnitConversionFactor?: number;
+  isFractionable?: boolean; // If true, allows selling in `saleUnit` that is a fraction/multiple of `primaryUnit`.
+  saleUnitConversionFactor?: number; // How many `primaryUnit`s are in one `saleUnit`. E.g., 1 tabla = 0.43 m2 => saleUnitConversionFactor = 0.43.
+  // New properties for e-commerce integration
   isOnline?: boolean;
   onlinePriceAdjustment?: number;
   mlSync?: boolean;
-  isFractionable?: boolean;
-  unitName?: string;
-  unitsPerParent?: number;
 }
 
 export interface Branch {
