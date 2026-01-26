@@ -10,6 +10,16 @@ export interface PriceList {
   isBase: boolean;
 }
 
+export interface Box {
+  id: string;
+  name: string;
+  balance: number;
+  type: 'efectivo' | 'banco' | 'virtual' | 'cheques';
+  status: 'abierta' | 'cerrada';
+  lastClosed?: string;
+  responsible?: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -43,8 +53,8 @@ export interface Product {
   name: string;
   supplierId?: string;
   costPrice: number;
-  salePrice: number; // Price per primaryUnit
-  stock: number; // Stock in primaryUnit
+  salePrice: number; 
+  stock: number; 
   category: string;
   brand: string;
   reorderPoint?: number;
@@ -58,9 +68,8 @@ export interface Product {
   imageUrl?: string;
   primaryUnit: 'unidad' | 'm2' | 'kg' | 'litro' | 'pie' | 'cm' | 'metro_lineal' | 'tabla' | 'caja' | 'barra'; 
   saleUnit: 'unidad' | 'm2' | 'kg' | 'litro' | 'tabla' | 'caja' | 'barra' | 'metro_lineal' | 'pie' | 'cm';
-  isFractionable?: boolean; // If true, allows selling in `saleUnit` that is a fraction/multiple of `primaryUnit`.
-  saleUnitConversionFactor?: number; // How many `primaryUnit`s are in one `saleUnit`. E.g., 1 tabla = 0.43 m2 => saleUnitConversionFactor = 0.43.
-  // New properties for e-commerce integration
+  isFractionable?: boolean; 
+  saleUnitConversionFactor?: number; 
   isOnline?: boolean;
   onlinePriceAdjustment?: number;
   mlSync?: boolean;
@@ -93,6 +102,7 @@ export interface Transaction {
   date: string;
   amount: number;
   type: 'ingreso' | 'egreso' | 'transferencia';
+  boxId: string; // Ubicación del fondo
   category?: 'venta' | 'compra' | 'gasto' | 'sueldo' | 'impuesto' | 'ajuste';
   paymentDetails: PaymentDetail[]; 
   description: string;
@@ -162,6 +172,14 @@ export interface InstallmentPayment {
   method: string;
 }
 
+export interface EmployeeAdvance {
+  id: string;
+  date: string;
+  amount: number;
+  description: string;
+  type: 'adelanto' | 'bono' | 'descuento';
+}
+
 export interface InternalUser {
   id: string | number;
   name: string;
@@ -171,8 +189,9 @@ export interface InternalUser {
   branchName: string;
   modules: string[];
   salary: number;
-  advances: { date: string; amount: number; }[];
+  advances: EmployeeAdvance[];
   joiningDate: string;
+  password?: string;
 }
 
 export interface SalesZone {
@@ -204,7 +223,6 @@ export interface SupplierAutomationConfig {
   lastRunMessage?: string;
 }
 
-// Added missing interfaces for AI Extraction, Quotes and Remitos modules
 export interface ExtractedQuoteItem {
   productName: string;
   quantity: number;
@@ -235,41 +253,40 @@ export interface RemitoItem {
   originalSaleUnitConversionFactor: number;
 }
 
-// *** NEW/UPDATED INTERFACES FOR REMITO/FACTURA RELATIONSHIP ***
 export interface Remito {
   id: string;
   date: string;
   client: string;
-  clientId: string; // Added client ID for easier linking
+  clientId: string; 
   itemsCount: number;
   itemsList: RemitoItem[];
   total: number;
-  status: 'pendiente' | 'entregado' | 'cancelado' | 'facturado'; // Added 'facturado' status
-  invoiceId?: string; // Link to the Sale (Invoice) document
+  status: 'pendiente' | 'entregado' | 'cancelado' | 'facturado'; 
+  invoiceId?: string; 
 }
 
-export interface SaleItem { // Used in Sale document
-  id: string; // Product ID
+export interface SaleItem { 
+  id: string; 
   sku: string;
   name: string;
-  brand: string;
-  price: number; // Sale price at the time of sale
+  brand: string; 
+  price: number; 
   quantity: number;
-  subtotal: number; // price * quantity
+  subtotal: number; 
   isManual?: boolean;
   selectedSaleUnit?: Product['saleUnit'];
 }
 
-export interface Sale { // Represents a final invoice/ticket
+export interface Sale { 
   id: string;
   clientName: string;
   clientId: string | null;
-  items: SaleItem[]; // Renamed from 'CartItem' to 'SaleItem' for clarity
+  items: SaleItem[]; 
   total: number;
   paymentDetails: PaymentDetail[];
-  docType: 'ticket' | 'factura_a' | 'factura_b' | 'remito' | 'presupuesto'; // Changed 'remito' here means a direct remito-sale
+  docType: 'ticket' | 'factura_a' | 'factura_b' | 'remito' | 'presupuesto'; 
   date: string;
   status: 'completado' | 'pendiente';
   seller: string;
-  remitoIds?: string[]; // Links to associated Remito documents
+  remitoIds?: string[]; 
 }

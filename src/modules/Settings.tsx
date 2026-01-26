@@ -39,10 +39,20 @@ const Settings: React.FC<SettingsProps> = ({ initialTab = 'company', plan, setPl
 
   const [selectedDoc, setSelectedDoc] = useState<PrintDocType>('factura');
 
-  // Asegurar que si el prop initialTab cambia (porque el usuario cambió de 'settings' a 'data' en el sidebar), el estado interno se actualice.
+  // Asegurar que si el prop initialTab cambia, el estado interno se actualice.
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
+
+  // CRITICAL GUARD: Si companyInfo no existe, no intentamos renderizar lógica que dependa de él
+  if (!companyInfo || !companyInfo.printConfigs) {
+    return (
+      <div className="flex flex-col items-center justify-center p-20 text-slate-400">
+        <Loader2 className="w-10 h-10 animate-spin mb-4 text-orange-500" />
+        <p className="font-bold uppercase tracking-widest text-xs">Cargando configuración...</p>
+      </div>
+    );
+  }
 
   const currentPrintConfig = companyInfo.printConfigs[selectedDoc];
 
@@ -176,6 +186,8 @@ const Settings: React.FC<SettingsProps> = ({ initialTab = 'company', plan, setPl
     let baseW = 210;
     let baseH = 297;
     let scale = 1.2;
+
+    if (!currentPrintConfig) return { width: baseW, height: baseH, scale };
 
     switch(currentPrintConfig.pageSize) {
       case 'A5': 

@@ -133,7 +133,7 @@ const Installments: React.FC = () => {
         nextDueDate: planFormData.nextDueDate,
         description: planFormData.description!,
       };
-      
+
       if (activePlan) {
         await updateInstallmentPlan(activePlan.id, planToSave);
       } else {
@@ -181,7 +181,7 @@ const Installments: React.FC = () => {
     try {
       const newRemaining = activePlan.remainingAmount - paymentData.amountPaid;
       const newStatus: InstallmentStatus = newRemaining <= 0 ? 'pagado' : 'activo';
-      
+
       // Fix: Added missing required paymentDetails property to the new payment object
       const newPayment: InstallmentPayment = {
         id: `pay-${Date.now()}`,
@@ -193,7 +193,7 @@ const Installments: React.FC = () => {
       };
 
       const updatedPayments = [...activePlan.payments, newPayment];
-      
+
       // Update client balance
       const client = clients.find(c => c.id === activePlan.clientId);
       if (client) {
@@ -315,9 +315,8 @@ const Installments: React.FC = () => {
                   <button
                     key={status}
                     onClick={() => setFilterStatus(status)}
-                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
-                      filterStatus === status ? 'bg-purple-600 text-white shadow-md' : 'text-slate-50 hover:bg-slate-50'
-                    }`}
+                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${filterStatus === status ? 'bg-purple-600 text-white shadow-md' : 'text-slate-50 hover:bg-slate-50'
+                      }`}
                   >
                     {status === 'all' ? 'Todos' : INSTALLMENT_STATUS_LABELS[status as InstallmentStatus]}
                   </button>
@@ -611,7 +610,7 @@ const Installments: React.FC = () => {
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo Pendiente</span>
                 <span className="text-3xl font-black text-red-600">${activePlan.remainingAmount.toLocaleString()}</span>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monto del Pago ($)</label>
                 <input

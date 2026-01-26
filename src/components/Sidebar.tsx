@@ -1,133 +1,124 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Users, 
-  Settings, 
-  LogOut,
-  ShoppingBag,
-  ChevronRight,
-  Truck,
-  BarChart3,
-  Receipt
+import {
+  LayoutDashboard, ShoppingCart, Users, Package,
+  Truck, CreditCard, BarChart3, Settings,
+  LogOut, ShoppingBag, ChevronRight, FileText,
+  Layers, Database, Globe, Receipt
 } from 'lucide-react';
 
 interface SidebarProps {
-  activeModule: string;
-  setActiveModule: (module: string) => void;
-  user?: any; 
+  activeTab: string;
+  setActiveTab: (id: string) => void;
+  companyInfo: any;
+  currentUser: any;
+  onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeModule, setActiveModule, user }) => {
-  
-  // --- CAPA DE SEGURIDAD PARA EVITAR EL ERROR 'LOGO' ---
-  // Si user es undefined o no tiene business, usamos estos datos por defecto
-  const safeBusiness = user?.business || { 
-    name: "FerroGest ERP", 
-    logo: "", 
-    address: "Administración Central" 
-  };
-  
-  const safeName = user?.name || user?.displayName || "Administrador";
-  const safeRole = user?.role || "Master";
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, companyInfo, currentUser, onLogout }) => {
 
-  const menuItems = [
-    { id: 'dashboard', label: 'Panel Principal', icon: LayoutDashboard },
-    { id: 'inventory', label: 'Inventario / Stock', icon: Package },
-    { id: 'sales', label: 'Ventas y Caja', icon: ShoppingCart },
-    { id: 'purchases', label: 'Compras / Gastos', icon: Receipt },
-    { id: 'customers', label: 'Clientes', icon: Users },
-    { id: 'suppliers', label: 'Proveedores', icon: Truck },
-    { id: 'reports', label: 'Reportes / Estadísticas', icon: BarChart3 },
-    { id: 'users', label: 'Personal / Usuarios', icon: Settings },
+  const menuSchema = [
+    {
+      title: 'Principal',
+      items: [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      ]
+    },
+    {
+      title: 'Comercial',
+      items: [
+        { id: 'sales', label: 'Ventas', icon: ShoppingCart },
+        { id: 'quotes', label: 'Cotizaciones', icon: FileText },
+        { id: 'clients', label: 'Clientes', icon: Users },
+        { id: 'ecommerce', label: 'E-Commerce', icon: Globe },
+      ]
+    },
+    {
+      title: 'Productos & Stock',
+      items: [
+        { id: 'inventory', label: 'Inventario', icon: Package },
+        { id: 'stock-adjustment', label: 'Ajuste de Stock', icon: Layers },
+        { id: 'suppliers', label: 'Proveedores', icon: Truck },
+        { id: 'prices', label: 'Precios', icon: Receipt },
+      ]
+    },
+    {
+      title: 'Administración',
+      items: [
+        { id: 'cashier', label: 'Cajas y Pagos', icon: CreditCard },
+        { id: 'finance', label: 'Finanzas', icon: BarChart3 },
+      ]
+    },
+    {
+      title: 'Sistema',
+      items: [
+        { id: 'users', label: 'Usuarios', icon: Settings },
+        { id: 'settings', label: 'Configuración', icon: Database },
+      ]
+    }
   ];
-
-  const handleLogout = () => {
-    // Limpia la sesión y recarga la página
-    window.location.reload();
-  };
 
   return (
     <div className="w-72 bg-slate-900 h-full flex flex-col text-slate-300 border-r border-slate-800">
-      
-      {/* SECCIÓN DEL LOGO (CORREGIDA) */}
-      <div className="p-8">
-        <div className="flex items-center gap-4 bg-slate-800/50 p-4 rounded-3xl border border-slate-700/50">
-          <div className="w-12 h-12 bg-orange-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-orange-900/20">
-            {/* Si existe logo lo muestra, si no, muestra el icono de maleta */}
-            {safeBusiness.logo ? (
-              <img 
-                src={safeBusiness.logo} 
-                alt="Logo" 
-                className="w-full h-full object-cover rounded-2xl" 
-              />
-            ) : (
-              <ShoppingBag className="text-white w-6 h-6" />
-            )}
-          </div>
+      <div className="p-6">
+        <div className="flex items-center gap-3 bg-orange-600 p-4 rounded-2xl shadow-lg shadow-orange-900/20">
+          <ShoppingBag className="text-white" size={24} />
           <div className="overflow-hidden">
-            <h2 className="text-white font-black text-sm truncate uppercase tracking-wider">
-              {safeBusiness.name}
-            </h2>
-            <p className="text-[10px] text-slate-500 font-bold truncate">
-              {safeBusiness.address}
-            </p>
+            <h1 className="text-white font-black text-sm truncate uppercase tracking-tighter">
+              {companyInfo?.name || "FerroGest ERP"}
+            </h1>
           </div>
         </div>
       </div>
 
-      {/* NAVEGACIÓN */}
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto custom-scrollbar">
-        <div className="px-4 mb-4">
-          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Menú</p>
-        </div>
-        
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeModule === item.id;
-          
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveModule(item.id)}
-              className={`
-                w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-200
-                ${isActive 
-                  ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/40' 
-                  : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'}
-              `}
-            >
-              <div className="flex items-center gap-3">
-                <Icon size={20} strokeWidth={isActive ? 3 : 2} />
-                <span className="font-bold text-sm">{item.label}</span>
-              </div>
-              {isActive && <ChevronRight size={16} />}
-            </button>
-          );
-        })}
+      <nav className="flex-1 px-4 space-y-6 overflow-y-auto custom-scrollbar pb-10">
+        {menuSchema.map((section) => (
+          <div key={section.title} className="space-y-2">
+            <h3 className="px-4 text-[10px] font-black text-slate-500 uppercase tracking-widest opacity-50">
+              {section.title}
+            </h3>
+            <div className="space-y-1">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)} // <--- AQUÍ SE CONECTA EL CABLE
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 ${isActive
+                        ? 'bg-orange-600 text-white shadow-lg shadow-orange-900/40'
+                        : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'
+                      }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon size={18} strokeWidth={isActive ? 3 : 2} />
+                      <span className="font-bold text-xs">{item.label}</span>
+                    </div>
+                    {isActive && <ChevronRight size={14} />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      {/* PERFIL Y SALIDA */}
-      <div className="p-6 mt-auto border-t border-slate-800 bg-slate-900/50">
-        <div className="flex items-center gap-3 mb-6 px-2">
-          <div className="w-10 h-10 rounded-full bg-slate-700 border-2 border-slate-600 flex items-center justify-center text-white font-bold text-xs shadow-inner">
-            {safeName.substring(0, 2).toUpperCase()}
+      <div className="p-6 bg-slate-950/50 border-t border-slate-800">
+        <div className="flex items-center gap-3 mb-4 px-2">
+          <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center font-bold text-xs text-white border border-slate-600">
+            {currentUser?.name?.substring(0, 2).toUpperCase()}
           </div>
           <div className="overflow-hidden">
-            <p className="text-sm font-bold text-white truncate">{safeName}</p>
-            <p className="text-[10px] text-orange-500 font-black uppercase tracking-tighter">
-              {safeRole}
+            <p className="text-xs font-bold text-white truncate">{currentUser?.name}</p>
+            <p className="text-[9px] text-orange-500 font-black uppercase tracking-tighter">
+              {currentUser?.role}
             </p>
           </div>
         </div>
-
-        <button 
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors font-bold text-sm"
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center gap-2 px-2 text-red-400 hover:text-red-300 transition-colors font-black text-[10px] uppercase tracking-widest"
         >
-          <LogOut size={18} />
-          <span>Cerrar Sesión</span>
+          <LogOut size={16} /> Cerrar Sesión
         </button>
       </div>
     </div>

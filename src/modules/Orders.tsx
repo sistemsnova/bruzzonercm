@@ -4,10 +4,10 @@ import {
   ListTodo, Plus, Search, User, Calendar, Tag, ShoppingCart,
   Package, DollarSign, Edit3, Trash2, X, Info, Loader2,
   CheckCircle2, AlertCircle, RefreshCw, FileText, Printer,
-  ChevronRight, ArrowUpRight, Ban, Save
+  ChevronRight, ArrowUpRight, Ban, Save, Truck
 } from 'lucide-react';
 import { useFirebase } from '../context/FirebaseContext';
-import { Product, Client, Order, OrderItem } from '../types';
+import { Product, Client, Order, OrderItem, RemitoItem, Remito } from '../types';
 
 type OrderStatus = 'pendiente_preparacion' | 'listo_retiro' | 'en_camino' | 'entregado' | 'cancelado';
 const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
@@ -29,7 +29,7 @@ const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
 const ITEMS_PER_PAGE_PICKER = 10;
 
 const Orders: React.FC = () => {
-  const { clients, orders, addOrder, updateOrder, deleteOrder, fetchProductsPaginatedAndFiltered } = useFirebase();
+  const { clients, orders, addOrder, updateOrder, deleteOrder, fetchProductsPaginatedAndFiltered, addRemito } = useFirebase();
 
   const [filterSearch, setFilterSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<OrderStatus | 'all'>('all');
@@ -65,6 +65,12 @@ const Orders: React.FC = () => {
     unitPrice: 0,
     quantity: 1,
   });
+
+  // New states for Remito generation
+  const [showGenerateRemitoModal, setShowGenerateRemitoModal] = useState(false);
+  const [isGeneratingRemito, setIsGeneratingRemito] = useState(false);
+  const [selectedOrderForRemito, setSelectedOrderForRemito] = useState<Order | null>(null);
+
 
   const loadPickerProducts = useCallback(async (
     isNewSearch: boolean = false,
@@ -198,7 +204,7 @@ const Orders: React.FC = () => {
     setOrderItemsForm(prev => [
       ...prev,
       {
-        productId: `service-${Date.now()}`, 
+        productId: `service-${Date.now()}`,
         sku: 'SERVICIO',
         name: serviceItemData.name,
         brand: 'N/A',
@@ -230,7 +236,7 @@ const Orders: React.FC = () => {
         dateCreated: orderFormData.dateCreated || new Date().toISOString().split('T')[0],
         dateDue: orderFormData.dateDue,
         notes: orderFormData.notes,
-        isServiceOrder: orderItemsForm.some(item => item.isService), 
+        isServiceOrder: orderItemsForm.some(item => item.isService),
       };
 
       if (activeOrder) {
@@ -271,6 +277,65 @@ const Orders: React.FC = () => {
       }
     }
   };
+
+  // --- New Remito Generation Logic ---
+  const openGenerateRemitoModal = (order: Order) => {
+    setSelectedOrderForRemito(order);
+    setShowGenerateRemitoModal(true);
+  };
+
+  const handleGenerateRemitoFromOrder = async () => {
+    if (!selectedOrderForRemito) return;
+
+    setIsGeneratingRemito(true);
+    try {
+      // Prepare Remito items from Order items
+      const remitoItemsList: RemitoItem[] = selectedOrderForRemito.items.map(orderItem => ({
+        id: orderItem.productId,
+        sku: orderItem.sku,
+        name: orderItem.name,
+        quantity: orderItem.quantity,
+        price: orderItem.unitPrice, // Use unitPrice from orderItem as remito item price
+        brand: orderItem.brand,
+        // Assuming default values for these if not explicitly present in orderItem
+        selectedSaleUnit: orderItem.selectedSaleUnit || 'unidad',
+        originalPrimaryUnit: orderItem.originalProduct?.primaryUnit || 'unidad',
+        originalSaleUnit: orderItem.originalProduct?.saleUnit || 'unidad',
+        originalSaleUnitConversionFactor: orderItem.originalProduct?.saleUnitConversionFactor || 1,
+      }));
+
+      // Fix: Explicitly type `remitoData` to `Omit<Remito, 'id'>` to enforce correct `status` type
+      const remitoData: Omit<Remito, 'id'> = {
+        date: new Date().toISOString().split('T')[0],
+        client: selectedOrderForRemito.clientName,
+        clientId: selectedOrderForRemito.clientId,
+        itemsCount: remitoItemsList.length,
+        itemsList: remitoItemsList,
+        total: selectedOrderForRemito.total,
+        status: 'pendiente', // This is a valid literal for Remito['status']
+        // You might want to link remitoId to the order here too, if Order type had a remitoIds field
+      };
+
+      const newRemitoId = await addRemito(remitoData);
+
+      // Update the original Order's status
+      await updateOrder(selectedOrderForRemito.id, {
+        status: 'en_camino', // Or 'entregado', depending on flow
+        // If order had a remitoIds array, you'd push newRemitoId here
+      });
+
+      alert(`Remito N° ${newRemitoId} generado con éxito para el pedido ${selectedOrderForRemito.id}!`);
+      setShowGenerateRemitoModal(false);
+      setSelectedOrderForRemito(null); // Clear selected order
+    } catch (error) {
+      console.error('Error al generar remito desde pedido:', error);
+      alert('Ocurrió un error al generar el remito.');
+    } finally {
+      setIsGeneratingRemito(false);
+    }
+  };
+  // --- End Remito Generation Logic ---
+
 
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
@@ -407,6 +472,105 @@ const Orders: React.FC = () => {
     </div>
   );
 
+  const renderGenerateRemitoModal = () => {
+    if (!selectedOrderForRemito) return null;
+
+    return (
+      <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[110] flex items-center justify-center p-4">
+        <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+          <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-blue-500 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                <Truck className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black uppercase tracking-tight">Generar Remito</h2>
+                <p className="text-blue-100 text-[10px] font-black uppercase tracking-widest mt-1">Para Pedido N° {selectedOrderForRemito.id}</p>
+              </div>
+            </div>
+            <button onClick={() => setShowGenerateRemitoModal(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <section className="bg-slate-50 p-6 rounded-3xl border border-slate-100 space-y-4">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Detalles del Pedido</h3>
+              <div className="grid grid-cols-2 gap-4 text-sm font-medium text-slate-700">
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-widest">Cliente</p>
+                  <p className="font-bold text-slate-900">{selectedOrderForRemito.clientName}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-widest">Fecha Pedido</p>
+                  <p className="font-bold text-slate-900">{new Date(selectedOrderForRemito.dateCreated).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-widest">Total</p>
+                  <p className="font-bold text-slate-900">${selectedOrderForRemito.total.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-slate-500 uppercase tracking-widest">Estado Actual</p>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase border ${ORDER_STATUS_COLORS[selectedOrderForRemito.status]}`}>
+                    {ORDER_STATUS_LABELS[selectedOrderForRemito.status]}
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ítems a Incluir en Remito</h3>
+              <div className="border border-slate-100 rounded-2xl overflow-hidden">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
+                    <tr>
+                      <th className="px-6 py-3">Artículo</th>
+                      <th className="px-6 py-3 text-center">Cant.</th>
+                      <th className="px-6 py-3 text-right">Unitario</th>
+                      <th className="px-6 py-3 text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {selectedOrderForRemito.items.map((item, idx) => (
+                      <tr key={idx} className="text-sm">
+                        <td className="px-6 py-4">
+                          <p className="font-bold text-slate-800">{item.name}</p>
+                          <p className="text-[10px] text-slate-400 uppercase">{item.sku}</p>
+                        </td>
+                        <td className="px-6 py-4 text-center">{item.quantity}</td>
+                        <td className="px-6 py-4 text-right">${item.unitPrice.toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right font-black">${item.subtotal.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100 flex items-start gap-4">
+                <Info className="w-6 h-6 text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-blue-900">Nota:</p>
+                  <p className="text-xs text-blue-700 mt-1">Este remito incluirá todos los ítems del pedido. El stock se deducirá del inventario al generar el remito.</p>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
+            <button onClick={() => setShowGenerateRemitoModal(false)} className="flex-1 py-4 bg-white border border-slate-200 rounded-2xl font-black text-slate-500 uppercase text-xs tracking-widest">Cancelar</button>
+            <button
+              onClick={handleGenerateRemitoFromOrder}
+              disabled={isGeneratingRemito}
+              className="flex-1 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-xl shadow-blue-600/20 hover:bg-blue-500 transition-all flex items-center justify-center gap-2 uppercase text-xs tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isGeneratingRemito ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+              {isGeneratingRemito ? 'Generando Remito...' : 'Confirmar Generación de Remito'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-6 pb-20">
       <header className="flex justify-between items-center">
@@ -444,9 +608,8 @@ const Orders: React.FC = () => {
                   <button
                     key={status}
                     onClick={() => setFilterStatus(status)}
-                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
-                      filterStatus === status ? 'bg-orange-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'
-                    }`}
+                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${filterStatus === status ? 'bg-orange-600 text-white shadow-md' : 'text-slate-50 hover:bg-slate-50'
+                      }`}
                   >
                     {status === 'all' ? 'Todos' : ORDER_STATUS_LABELS[status as OrderStatus]}
                   </button>
@@ -532,6 +695,15 @@ const Orders: React.FC = () => {
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
+                        {['pendiente_preparacion', 'listo_retiro', 'en_camino'].includes(order.status) && (
+                          <button
+                            onClick={() => openGenerateRemitoModal(order)}
+                            className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-lg transition-colors"
+                            title="Generar Remito"
+                          >
+                            <Truck className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleDeleteOrder(order.id)}
                           className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
@@ -585,7 +757,7 @@ const Orders: React.FC = () => {
                 <X className="w-6 h-6" />
               </button>
             </div>
-            
+
             <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <section className="space-y-6">
                 <div className="grid grid-cols-2 gap-6">
@@ -629,7 +801,7 @@ const Orders: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                  
+
                   <div className="border border-slate-100 rounded-2xl overflow-hidden">
                     <table className="w-full">
                       <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
@@ -652,9 +824,9 @@ const Orders: React.FC = () => {
                                 <p className="text-[10px] text-slate-400 uppercase">{item.sku}</p>
                               </td>
                               <td className="px-6 py-4 text-center">
-                                <input 
-                                  type="number" 
-                                  value={item.quantity} 
+                                <input
+                                  type="number"
+                                  value={item.quantity}
                                   onChange={e => handleOrderItemQuantityChange(idx, parseInt(e.target.value))}
                                   className="w-16 text-center border rounded-lg font-bold"
                                 />
@@ -691,7 +863,7 @@ const Orders: React.FC = () => {
               </div>
               <div className="flex gap-4">
                 <button onClick={() => setShowOrderModal(false)} className="px-8 py-4 bg-white border border-slate-200 rounded-2xl font-black text-slate-500 uppercase text-xs tracking-widest">Cancelar</button>
-                <button 
+                <button
                   onClick={handleSaveOrder}
                   disabled={isSavingOrder}
                   className="px-8 py-4 bg-orange-600 text-white rounded-2xl font-black shadow-xl shadow-orange-600/20 hover:bg-orange-500 transition-all flex items-center justify-center gap-2 uppercase text-xs tracking-widest"
@@ -704,6 +876,8 @@ const Orders: React.FC = () => {
           </div>
         </div>
       )}
+
+      {showGenerateRemitoModal && renderGenerateRemitoModal()}
     </div>
   );
 };

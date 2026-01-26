@@ -1,54 +1,126 @@
 import React, { useState } from 'react';
-import { FirebaseProvider, useFirebase } from './context/FirebaseContext';
-import LoginScreen from './LoginScreen';
+import { FirebaseProvider } from './context/FirebaseContext';
 import Sidebar from './components/Sidebar';
-import Inventory from './modules/Inventory';
-import Sales from './modules/Sales';
-import Users from './modules/Users';
-// Importa los nuevos módulos si ya los tienes creados:
-// import Dashboard from './modules/Dashboard';
-// import Customers from './modules/Customers';
+
+// IMPORTACIONES NOMBRADAS (Sincronizadas con tu lista de archivos)
+import { Dashboard } from './modules/Dashboard';
+import { Inventory } from './modules/Inventory';
+import { Sales } from './modules/Sales';
+import { Purchases } from './modules/Purchases';
+import { Clients } from './modules/Clients';
+import { Suppliers } from './modules/Suppliers';
+import { Cashier } from './modules/Cashier';
+import { Reports } from './modules/Reports';
+import { Settings } from './modules/Settings';
+import { Branches } from './modules/Branches';
+import { Users } from './modules/Users'; // Cambiado a Users según tu lista
+import { PriceUpdate } from './modules/PriceUpdate';
+import { BulkImport } from './modules/BulkImport';
+import { Warehouse } from './modules/Warehouse';
+import { PurchaseOrders } from './modules/PurchaseOrders';
+import { Balances } from './modules/Balances';
+import { Finance } from './modules/Finance';
+import { Ecommerce } from './modules/Ecommerce';
+import { Loyalty } from './modules/Loyalty';
+import { Integrations } from './modules/Integrations';
+import { Quotes } from './modules/Quotes';
+import { Orders } from './modules/Orders';
+import { Installments } from './modules/Installments';
+import { SalesZones } from './modules/SalesZones';
+import { MissingItems } from './modules/MissingItems';
+import { StockAdjustment } from './modules/StockAdjustment';
+import { BulkModification } from './modules/BulkModification';
+import { Remitos } from './modules/Remitos';
+
+import LoginScreen from './LoginScreen';
+import { Role } from './types';
+
+export interface CompanyInfo {
+  name: string;
+  cuit: string;
+  ivaCondition: string;
+  address: string;
+  logo: string | null;
+  arca: { enabled: boolean; puntoVenta: number; iibb: string; crtValidUntil: string; };
+}
+
+const initialCompanyInfo: CompanyInfo = {
+  name: 'Ferretería Bruzzone ERP',
+  cuit: '30-71122334-9',
+  ivaCondition: 'Responsable Inscripto',
+  address: 'Sede Central',
+  logo: null,
+  arca: { enabled: true, puntoVenta: 5, iibb: '', crtValidUntil: '' }
+};
 
 const AppContent: React.FC = () => {
-  const { user, loading } = useFirebase();
-  // Cambiamos el inicio a 'dashboard'
-  const [activeModule, setActiveModule] = useState('dashboard');
-  const [masterUser, setMasterUser] = useState<{ role: any; name: string } | null>(null);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ name: string, role: Role }>({ name: '', role: 'vendedor' });
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(initialCompanyInfo);
 
-  const handleLoginSuccess = (role: any, name: string) => {
-    if (role === 'admin' && name === 'Administrador Maestro') {
-      setMasterUser({ role, name });
+  const handleLoginSuccess = (role: Role, name: string) => {
+    setCurrentUser({ name, role });
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setCurrentUser({ name: '', role: 'vendedor' });
+  };
+
+  if (!isLoggedIn) {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  const renderActiveModule = () => {
+    switch (activeTab) {
+      case 'dashboard': return <Dashboard />;
+      case 'inventory': return <Inventory />;
+      case 'missing-items': return <MissingItems />;
+      case 'stock-adjustment': return <StockAdjustment />;
+      case 'bulk-modification': return <BulkModification />;
+      case 'sales': return <Sales />;
+      case 'purchases': return <Purchases />;
+      case 'clients': return <Clients />;
+      case 'suppliers': return <Suppliers />;
+      case 'cashier': return <Cashier />;
+      case 'balances': return <Balances />;
+      case 'installments': return <Installments />;
+      case 'finance': return <Finance />;
+      case 'reports': return <Reports />;
+      case 'branches': return <Branches />;
+      case 'users': return <Users />;
+      case 'prices': return <PriceUpdate />;
+      case 'bulk-import': return <BulkImport />;
+      case 'warehouse': return <Warehouse />;
+      case 'purchase-orders': return <PurchaseOrders />;
+      case 'ecommerce': return <Ecommerce />;
+      case 'loyalty': return <Loyalty />;
+      case 'remitos': return <Remitos />;
+      case 'integrations': return <Integrations />;
+      case 'quotes': return <Quotes />;
+      case 'orders': return <Orders />;
+      case 'sales-zones': return <SalesZones />;
+      case 'settings':
+        return <Settings isAdmin={currentUser.role === 'admin'} companyInfo={companyInfo} setCompanyInfo={setCompanyInfo} />;
+      default: return <Dashboard />;
     }
   };
 
-  if (loading) return <div className="h-screen w-screen flex items-center justify-center bg-slate-900 text-white font-bold">Iniciando...</div>;
-  if (!user && !masterUser) return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
-
-  const profile = {
-    name: user?.displayName || masterUser?.name || 'Usuario',
-    role: (user as any)?.role || masterUser?.role || 'admin',
-    business: (user as any)?.business || { name: "FerroGest ERP", logo: "" }
-  };
-
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <Sidebar activeModule={activeModule} setActiveModule={setActiveModule} user={profile} />
-      
-      <main className="flex-1 overflow-y-auto p-8">
-        {/* Lógica para mostrar cada módulo */}
-        {activeModule === 'dashboard' && <div className="text-2xl font-black text-slate-800">Bienvenido al Panel de Control</div>}
-        {activeModule === 'inventory' && <Inventory />}
-        {activeModule === 'sales' && <Sales />}
-        {activeModule === 'users' && <Users />}
-        
-        {/* Mensaje temporal para módulos que aún no conectas */}
-        {!['dashboard', 'inventory', 'sales', 'users'].includes(activeModule) && (
-          <div className="h-full flex flex-col items-center justify-center text-slate-400">
-            <ShoppingBag size={64} className="mb-4 opacity-20" />
-            <h2 className="text-xl font-bold italic">Módulo "{activeModule}" en desarrollo...</h2>
-            <p className="text-sm">Muy pronto estará disponible la gestión completa aquí.</p>
-          </div>
-        )}
+    <div className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans">
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        companyInfo={companyInfo}
+        currentUser={currentUser}
+        onLogout={handleLogout}
+      />
+      <main className="flex-1 overflow-y-auto p-8 custom-scrollbar relative">
+        <div className="max-w-7xl mx-auto">
+          {renderActiveModule()}
+        </div>
       </main>
     </div>
   );
