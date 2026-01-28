@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<<<<<<< HEAD
     <title>Ferretería Bruzzone - Sistema de Gestión</title>
+    
+    <!-- Fuentes -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CDN para prototipado rápido -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -26,6 +29,7 @@
             }
         }
     </script>
+
     <style>
         @layer base {
             body { @apply antialiased text-slate-900 bg-slate-50; }
@@ -42,53 +46,33 @@
         }
         .animate-float { animation: float 6s ease-in-out infinite; }
     </style>
-<script type="importmap">
-{
-  "imports": {
-    "path": "https://esm.sh/path@^0.12.7",
-    "url": "https://esm.sh/url@^0.11.4",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "recharts": "https://esm.sh/recharts@^3.7.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
-    "xlsx": "https://esm.sh/xlsx@^0.18.5",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "firebase/": "https://esm.sh/firebase@^12.8.0/"
-=======
-    <title>Sistems Nova - Realtime</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <script src="https://cdn.tailwindcss.com"></script>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "firebase/": "https://esm.sh/firebase@^12.8.0/",
-    "recharts": "https://esm.sh/recharts@^3.6.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
->>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
-  }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
+
+    <!-- Import Map para que los módulos carguen desde la web (Compatible con AI Studio) -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@^19.2.4",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+        "react/": "https://esm.sh/react@^19.2.4/",
+        "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+        "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+        "recharts": "https://esm.sh/recharts@^3.7.0",
+        "xlsx": "https://esm.sh/xlsx@^0.18.5",
+        "firebase/": "https://esm.sh/firebase@^12.8.0/",
+        "vite": "https://esm.sh/vite@^7.3.1",
+        "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
+      }
+    }
+    </script>
+
+    <!-- Ruta corregida al CSS dentro de src -->
+    <link rel="stylesheet" href="/src/index.css">
 </head>
-<<<<<<< HEAD
+
 <body class="bg-slate-50 overflow-hidden">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    
+    <!-- RUTA CRÍTICA: Apunta al archivo index.tsx dentro de la carpeta src -->
+    <script type="module" src="/src/index.tsx"></script>
 </body>
 </html>
-=======
-<body class="bg-gray-50">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-</body>
-</html>
->>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
