@@ -1,41 +1,33 @@
-<<<<<<< HEAD
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Fix: Define __dirname as it is not automatically available in ES modules environments
+// Configuración para que __dirname funcione en entornos modernos
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [react()],
+  
+  // IMPORTANTE: Cambia 'bruzzonercm' por el nombre de tu repositorio si es distinto.
+  // Esto es vital para que las imágenes y rutas carguen en GitHub Pages.
+  base: '/bruzzonercm/', 
+
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './'),
+      // El símbolo '@' ahora apuntará siempre a tu carpeta 'src'
+      '@': path.resolve(__dirname, './src'),
     },
   },
+  
+  build: {
+    chunkSizeWarningLimit: 2000, // Aumentamos el límite para evitar avisos de archivos grandes
+    outDir: 'dist',
+  },
+
+  // Esto ayuda a Gemini y Firebase a manejar variables de entorno
   define: {
-    // Inyecta variables de entorno al proceso global de forma segura
-    'process.env': process.env
+    'process.env': {}
   }
 });
-=======
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
-
-export default defineConfig({
-  plugins: [react()],
-  base: '/bruzzonercm/', // Asegúrate que este sea el nombre exacto de tu repo en GitHub
-  resolve: {
-    alias: {
-      // Ahora @ apunta a la carpeta src, que es donde está tu código
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-  build: {
-    chunkSizeWarningLimit: 1600, // Para evitar el aviso de archivos grandes
-  }
-})
->>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
