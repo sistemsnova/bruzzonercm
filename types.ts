@@ -1,5 +1,8 @@
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 export type Role = 'admin' | 'vendedor' | 'contador' | 'deposito';
 
 export interface PriceList {
@@ -25,8 +28,12 @@ export interface Client {
   id: string;
   name: string;
   cuit: string;
+<<<<<<< HEAD
   whatsapp?: string;
   phone?: string;
+=======
+  whatsapp: string;
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   email: string;
   specialDiscount: number;
   priceListId: string;
@@ -36,6 +43,7 @@ export interface Client {
   pointsEnabled?: boolean;
   lastMovement?: string;
   daysOverdue?: number;
+<<<<<<< HEAD
   province?: string;
   locality?: string;
   address?: string;
@@ -43,6 +51,8 @@ export interface Client {
   documentType?: 'CUIT' | 'DNI' | 'LE' | 'LC' | 'PAS' | 'otro';
   secondaryId?: string;
   ivaCondition?: string;
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 }
 
 export interface Supplier {
@@ -54,10 +64,13 @@ export interface Supplier {
   phone?: string;
   email?: string;
   lastPurchase?: string;
+<<<<<<< HEAD
   supplierCode?: string;
   locality?: string;
   ivaCondition?: string;
   address?: string;
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 }
 
 export interface Product {
@@ -86,6 +99,7 @@ export interface Product {
   isOnline?: boolean;
   onlinePriceAdjustment?: number;
   mlSync?: boolean;
+<<<<<<< HEAD
   ivaRate?: number;
   markup?: number;
   discount1?: number;
@@ -96,6 +110,8 @@ export interface Product {
   otherCode2?: string;
   otherCode3?: string;
   barcode?: string;
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 }
 
 export interface Branch {
@@ -114,14 +130,20 @@ export interface PaymentDetail {
   id: string;
   method: 'efectivo' | 'tarjeta_debito' | 'tarjeta_credito' | 'transferencia' | 'cheque' | 'echeq' | 'cuenta_corriente' | 'otro';
   amount: number;
+<<<<<<< HEAD
   commissionRate?: number;
   commissionAmount?: number;
   netAmount: number;
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   notes?: string;
   bank?: string;
   checkNumber?: string;
   dueDate?: string;
+<<<<<<< HEAD
   targetBoxId?: string;
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 }
 
 export interface Transaction {
@@ -129,7 +151,11 @@ export interface Transaction {
   date: string;
   amount: number;
   type: 'ingreso' | 'egreso' | 'transferencia';
+<<<<<<< HEAD
   boxId: string;
+=======
+  boxId: string; // Ubicación del fondo
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   category?: 'venta' | 'compra' | 'gasto' | 'sueldo' | 'impuesto' | 'ajuste';
   paymentDetails: PaymentDetail[]; 
   description: string;
@@ -137,6 +163,19 @@ export interface Transaction {
   auditStatus?: 'pendiente' | 'revisado' | 'auditado';
 }
 
+<<<<<<< HEAD
+=======
+export interface Check {
+  id: string;
+  number: string;
+  bank: string;
+  amount: number;
+  dueDate: string;
+  type: 'fisico' | 'echeq';
+  status: 'pendiente' | 'cobrado' | 'vencido';
+}
+
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 export interface Order {
   id: string;
   clientId: string;
@@ -245,7 +284,10 @@ export interface ExtractedQuoteItem {
   quantity: number;
 }
 
+<<<<<<< HEAD
 // Added QuoteItem interface to fix import error in modules/Quotes.tsx
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 export interface QuoteItem {
   productId: string;
   sku: string;
@@ -308,6 +350,7 @@ export interface Sale {
   seller: string;
   remitoIds?: string[]; 
 }
+<<<<<<< HEAD
 
 export interface Brand {
   id: string;
@@ -320,3 +363,5 @@ export interface Category {
   name: string;
   description?: string;
 }
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b

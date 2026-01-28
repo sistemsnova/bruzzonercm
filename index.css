@@ -1,4 +1,5 @@
 
+<<<<<<< HEAD
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -17,10 +18,22 @@ body {
   background: transparent; 
 }
 
+=======
+body { 
+  font-family: 'Inter', sans-serif; 
+}
+.custom-scrollbar::-webkit-scrollbar { 
+  width: 6px; 
+}
+.custom-scrollbar::-webkit-scrollbar-track { 
+  background: transparent; 
+}
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 .custom-scrollbar::-webkit-scrollbar-thumb { 
   background: #cbd5e1; 
   border-radius: 10px; 
 }
+<<<<<<< HEAD
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { 
   background: #94a3b8; 
@@ -36,3 +49,5 @@ body {
   transform: scale(1);
   transition: opacity 300ms, transform 300ms;
 }
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b

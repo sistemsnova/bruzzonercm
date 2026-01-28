@@ -4,7 +4,11 @@ import {
   UserPlus, ShieldCheck, Mail, Edit3, Trash2, Layout, CheckCircle2, X, Store, 
   DollarSign, Loader2, FileText, Lock, Plus, TrendingDown, TrendingUp, 
   AlertTriangle, Wallet, Save, Banknote, UserCog, ChevronDown, 
+<<<<<<< HEAD
   ShieldAlert, CloudLightning, ShieldCheck as ShieldCheckIcon, Receipt
+=======
+  ShieldAlert, CloudLightning, Receipt
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 } from 'lucide-react';
 import { useFirebase } from '../context/FirebaseContext';
 import { InternalUser, EmployeeAdvance, Box } from '../types';
@@ -124,8 +128,12 @@ const UsersModule: React.FC = () => {
         boxId: boxId,
         category: 'sueldo',
         description: `Liquidación Haberes: ${user.name} (Libro Sueldos Digital)`,
+<<<<<<< HEAD
         // Fix: added missing netAmount property required by PaymentDetail
         paymentDetails: [{ id: `pay-${Date.now()}`, method: 'efectivo', amount: net, netAmount: net }]
+=======
+        paymentDetails: [{ id: `pay-${Date.now()}`, method: 'efectivo', amount: net }]
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
       });
 
       await updateBox(boxId, { balance: selectedBox.balance - net });
@@ -158,8 +166,12 @@ const UsersModule: React.FC = () => {
           boxId: quickAdvance.boxId,
           category: 'sueldo',
           description: `Vale/Adelanto: ${showQuickAdvanceModal.name}`,
+<<<<<<< HEAD
           // Fix: added missing netAmount property required by PaymentDetail
           paymentDetails: [{ id: `pm-${Date.now()}`, method: 'efectivo', amount: quickAdvance.amount, netAmount: quickAdvance.amount }]
+=======
+          paymentDetails: [{ id: `pm-${Date.now()}`, method: 'efectivo', amount: quickAdvance.amount }]
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
         });
         await updateBox(quickAdvance.boxId, { balance: selectedBox.balance - quickAdvance.amount });
       }
@@ -235,7 +247,11 @@ const UsersModule: React.FC = () => {
               </div>
            </div>
            <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center gap-4">
+<<<<<<< HEAD
               <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl"><ShieldCheckIcon className="w-6 h-6" /></div>
+=======
+              <div className="p-4 bg-blue-50 text-blue-600 rounded-2xl"><ShieldCheck className="w-6 h-6" /></div>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">Certificados ARCA</p>
                 <h3 className="text-2xl font-black text-slate-800">{users.length}</h3>
@@ -359,7 +375,11 @@ const UsersModule: React.FC = () => {
                     confirmModal.type === 'danger' ? 'bg-red-100 text-red-600' : 
                     confirmModal.type === 'arca' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
                 }`}>
+<<<<<<< HEAD
                     {confirmModal.type === 'arca' ? <ShieldCheckIcon className="w-10 h-10" /> : <Banknote className="w-10 h-10" />}
+=======
+                    {confirmModal.type === 'arca' ? <ShieldCheck className="w-10 h-10" /> : <Banknote className="w-10 h-10" />}
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                 </div>
                 <div className="space-y-2">
                     <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight">{confirmModal.title}</h3>
@@ -442,7 +462,11 @@ const UsersModule: React.FC = () => {
                           <option key={box.id} value={box.id}>{box.name} (${box.balance.toLocaleString()})</option>
                         ))}
                       </select>
+<<<<<<< HEAD
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+=======
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                     </div>
                   </div>
                 )}
@@ -551,7 +575,11 @@ const UsersModule: React.FC = () => {
                   else await addUser(userFormData);
                   setShowUserModal(false);
                 } finally { setIsSaving(false); }
+<<<<<<< HEAD
               }} disabled={isSaving} className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-black flex items-center justify-center gap-3">
+=======
+              }} disabled={isSaving} className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:bg-black flex items-center gap-3">
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                 {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-5 h-5 text-orange-500" />}
                 {activeUser ? 'Guardar Perfil' : 'Dar de Alta'}
               </button>

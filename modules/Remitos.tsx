@@ -95,8 +95,12 @@ const localMockSales: Sale[] = [
       { id: 'p4', sku: 'SINT-20L', name: 'Sinteplast Pintura Interior 20L', quantity: 1, price: 25000, brand: 'Sinteplast', subtotal: 25000, selectedSaleUnit: 'litro' },
     ],
     total: 25000,
+<<<<<<< HEAD
     // Fix: Added missing mandatory netAmount property
     paymentDetails: [{ id: 'pd1', method: 'efectivo', amount: 25000, netAmount: 25000 }],
+=======
+    paymentDetails: [{ id: 'pd1', method: 'efectivo', amount: 25000 }],
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
     docType: 'factura_a',
     date: '2024-05-22T10:00:00Z',
     status: 'completado',
@@ -114,8 +118,12 @@ const localMockSales: Sale[] = [
       { id: 'p7', sku: 'ADHE-001', name: 'Adhesivo Epoxi', quantity: 1, price: 3500, brand: 'Poxipol', subtotal: 3500, selectedSaleUnit: 'unidad' }
     ],
     total: 16500,
+<<<<<<< HEAD
     // Fix: Added missing mandatory netAmount property
     paymentDetails: [{ id: 'pd2', method: 'transferencia', amount: 16500, netAmount: 16500 }],
+=======
+    paymentDetails: [{ id: 'pd2', method: 'transferencia', amount: 16500 }],
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
     docType: 'factura_b',
     date: '2024-05-25T11:30:00Z',
     status: 'completado',
@@ -139,9 +147,14 @@ export const Remitos: React.FC = () => {
   
   // Soporte para pagos mixtos en la facturación de remitos
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetail[]>([]);
+<<<<<<< HEAD
   // Fix: Added missing mandatory netAmount property to initial state
   const [newPaymentDetail, setNewPaymentDetail] = useState<Omit<PaymentDetail, 'id'>>({
     method: 'efectivo', amount: 0, notes: '', netAmount: 0
+=======
+  const [newPaymentDetail, setNewPaymentDetail] = useState<Omit<PaymentDetail, 'id'>>({
+    method: 'efectivo', amount: 0, notes: ''
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   });
 
   // NEW: State for selected document type in billing modal
@@ -221,6 +234,7 @@ export const Remitos: React.FC = () => {
       alert("Por favor, ingresa un monto mayor a cero.");
       return;
     }
+<<<<<<< HEAD
     // Fix: Added mandatory netAmount property to PaymentDetail object
     const paymentWithNet: PaymentDetail = { 
       ...newPaymentDetail, 
@@ -229,6 +243,10 @@ export const Remitos: React.FC = () => {
     };
     setPaymentDetails(prev => [...prev, paymentWithNet]);
     setNewPaymentDetail({ method: 'efectivo', amount: 0, notes: '', netAmount: 0 }); 
+=======
+    setPaymentDetails(prev => [...prev, { ...newPaymentDetail, id: Date.now().toString() }]);
+    setNewPaymentDetail({ method: 'efectivo', amount: 0, notes: '' }); 
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   };
 
   const openBillingModal = (remito: Remito | null = null, isBulk: boolean = false) => {
@@ -258,7 +276,11 @@ export const Remitos: React.FC = () => {
 
     setActiveRemito(remito); // Will be null if it's a bulk operation
     setPaymentDetails([]); // Clear previous payment details
+<<<<<<< HEAD
     setNewPaymentDetail({ method: 'efectivo', amount: 0, notes: '', netAmount: 0 });
+=======
+    setNewPaymentDetail({ method: 'efectivo', amount: 0, notes: '' });
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
     setBillingDocType('factura_a'); // Default doc type for billing
     setExtraAmount(0); // Reset extra amounts
     setExtraDescription(''); // Reset extra description

@@ -24,7 +24,11 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, companyInfo, currentUser, onLogout }) => {
+<<<<<<< HEAD
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['Principal', 'Comercial', 'Productos & Abastecimiento', 'Administración & Finanzas']);
+=======
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['Principal', 'Comercial', 'Administración & Finanzas']);
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   const [showShortcutModal, setShowShortcutModal] = useState(false);
   const [pinnedShortcuts, setPinnedShortcuts] = useState<string[]>(['sales', 'inventory', 'cashier']);
 
@@ -82,7 +86,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, companyInfo,
         { id: 'suppliers', label: 'Proveedores', icon: Truck, color: 'bg-orange-400' },
         { id: 'prices', label: 'Lista Precios', icon: RefreshCcw, color: 'bg-lime-600' },
         { id: 'bulk-import', label: 'Importar Datos', icon: FileUp, color: 'bg-slate-400' },
+<<<<<<< HEAD
         { id: 'catalog-config', label: 'Marcas & Rubros', icon: Tags, color: 'bg-purple-500' }, // New: Catalog Config
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
       ]
     },
     {
@@ -109,7 +116,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, companyInfo,
     );
   };
 
+<<<<<<< HEAD
   if (!companyInfo || !('name' in companyInfo)) {
+=======
+  if (!companyInfo || typeof companyInfo !== 'object' || !('name' in companyInfo)) {
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
     return (
       <div className="w-64 bg-slate-900 text-white flex flex-col h-screen border-r border-slate-800 justify-center items-center">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500 mb-2" />
@@ -127,7 +138,11 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, companyInfo,
           ) : (
             <div className="p-2 bg-orange-500 rounded-lg"><Tags className="w-6 h-6 text-white" /></div>
           )}
+<<<<<<< HEAD
           <span className="text-xl font-bold tracking-tight truncate">{companyInfo?.name || 'Sistems Nova'}</span>
+=======
+          <span className="text-xl font-bold tracking-tight truncate">{companyInfo?.name || 'FerroGest'}</span>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
         </div>
       </div>
 

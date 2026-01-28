@@ -46,7 +46,11 @@ const CustomerPortal: React.FC<CustomerPortalProps> = ({ client, onLogout, compa
             <ShoppingBag className="w-6 h-6" />
           </div>
           <div>
+<<<<<<< HEAD
             <h1 className="text-xl font-black text-slate-900 tracking-tighter italic uppercase">Sistems Nova</h1>
+=======
+            <h1 className="text-xl font-black text-slate-900 tracking-tighter italic uppercase">{companyInfo.name}</h1>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Portal de Clientes</p>
           </div>
         </div>
@@ -181,7 +185,11 @@ const CustomerPortal: React.FC<CustomerPortalProps> = ({ client, onLogout, compa
             <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-sm space-y-8 animate-in slide-in-from-left duration-500">
                <div className="space-y-2">
                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Informar un Pago</h3>
+<<<<<<< HEAD
                  <p className="text-slate-500 text-sm">¿Ya realizaste una transferencia? Adjunta el comprobante aquí para que actualizamos tu saldo.</p>
+=======
+                 <p className="text-slate-500 text-sm">¿Ya realizaste una transferencia? Adjunta el comprobante aquí para que actualicemos tu saldo.</p>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                </div>
 
                <div className="space-y-6">

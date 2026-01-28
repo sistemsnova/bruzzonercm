@@ -59,8 +59,12 @@ export const Cashier: React.FC = () => {
         boxId: boxId,
         category: formData.get('category') as any,
         description: formData.get('description') as string,
+<<<<<<< HEAD
         // Fix: added missing netAmount property required by PaymentDetail
         paymentDetails: [{ id: `pm-${Date.now()}`, method: formData.get('method') as any, amount: amount, netAmount: amount }]
+=======
+        paymentDetails: [{ id: `pm-${Date.now()}`, method: formData.get('method') as any, amount: amount }]
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
       });
 
       // Update actual box balance

@@ -61,6 +61,10 @@ const Ecommerce: React.FC = () => {
       const options = {
         limit: ITEMS_PER_PAGE_PICKER,
         searchTerm: searchTerm.toLowerCase().trim(),
+<<<<<<< HEAD
+=======
+        startAfterDoc: isNewSearch ? undefined : currentLastVisibleDoc,
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
         orderByField: 'name', 
         orderDirection: 'asc' as 'asc' 
       };
@@ -107,7 +111,11 @@ const Ecommerce: React.FC = () => {
       <header className={`p-4 flex justify-between items-center bg-white border-b sticky top-0 z-[60] ${mode === 'mobile' ? 'rounded-t-[2rem]' : ''}`}>
         <div className="flex items-center gap-2">
           <div className="p-1.5 bg-orange-600 rounded-lg text-white"><ShoppingBag className="w-4 h-4" /></div>
+<<<<<<< HEAD
           <span className="text-lg font-black text-slate-800 tracking-tighter uppercase italic">Sistems Nova</span>
+=======
+          <span className="text-lg font-black text-slate-800 tracking-tighter uppercase italic">FERRO-GEST</span>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
         </div>
         <div className="flex items-center gap-4">
           <button className="relative"><ShoppingCart className="w-5 h-5 text-slate-700" /><span className="absolute -top-1.5 -right-1.5 bg-orange-600 text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center">2</span></button>

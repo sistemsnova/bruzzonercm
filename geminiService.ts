@@ -95,6 +95,7 @@ export async function extractProductsFromText(message: string): Promise<Extracte
     return []; 
   }
 }
+<<<<<<< HEAD
 
 /**
  * Interpreta un comando de voz o texto del usuario para navegar por el ERP.
@@ -137,3 +138,5 @@ export async function interpretCommand(command: string) {
     return { action: 'ERROR', message: 'No entendí el comando.' };
   }
 }
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b

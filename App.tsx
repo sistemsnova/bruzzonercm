@@ -1,9 +1,16 @@
 
+<<<<<<< HEAD
 import React, { useState, useMemo, useEffect } from 'react';
 import { FirebaseProvider } from './context/FirebaseContext';
 import Sidebar from './components/Sidebar';
 import TabBar from './components/TabBar';
 import CommandPalette from './components/CommandPalette';
+=======
+import React, { useState, useMemo } from 'react';
+import { FirebaseProvider } from './context/FirebaseContext';
+import Sidebar from './components/Sidebar';
+import TabBar from './components/TabBar';
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 import Dashboard from './modules/Dashboard';
 import Inventory from './modules/Inventory';
 import { Sales } from './modules/Sales';
@@ -33,10 +40,22 @@ import StockAdjustment from './modules/StockAdjustment';
 import BulkModification from './modules/BulkModification';
 import { Remitos } from './modules/Remitos';
 import CustomerPortal from './modules/CustomerPortal';
+<<<<<<< HEAD
 import CatalogConfig from './modules/CatalogConfig'; 
 import LoginScreen from './LoginScreen';
 import { Role, Client } from './types';
 import { Search, Sparkles } from 'lucide-react';
+=======
+import LoginScreen from './LoginScreen';
+import { Role, Client } from './types';
+import { 
+  LayoutDashboard, Boxes, BadgeDollarSign, ShoppingCart, Users, Truck, 
+  Wallet, BarChart3, Settings as SettingsIcon, Store, RefreshCcw, FileUp, 
+  Warehouse as WarehouseIcon, ListChecks, Globe, Gift, ClipboardList, 
+  Plug, MessageSquareText, ListTodo, CreditCard, Scale, ClipboardCheck, 
+  PlusCircle, Layers, UserCog
+} from 'lucide-react';
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 
 export interface PrintSettings {
   pageSize: 'A4' | 'A5' | 'A6' | '80mm' | '58mm';
@@ -58,10 +77,15 @@ export interface CompanyInfo {
   address: string;
   logo: string | null;
   showLogoInSidebar: boolean;
+<<<<<<< HEAD
   defaultMarkup: number; 
   arca: { enabled: boolean; puntoVenta: number; iibb: string; crtValidUntil: string; };
   printConfigs: { factura: PrintSettings; remito: PrintSettings; recibo: PrintSettings; etiqueta: PrintSettings; };
   paymentCommissions: Record<string, number>; 
+=======
+  arca: { enabled: boolean; puntoVenta: number; iibb: string; crtValidUntil: string; };
+  printConfigs: { factura: PrintSettings; remito: PrintSettings; recibo: PrintSettings; etiqueta: PrintSettings; };
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 }
 
 const DEFAULT_PRINT_CONFIG: PrintSettings = {
@@ -70,6 +94,7 @@ const DEFAULT_PRINT_CONFIG: PrintSettings = {
 };
 
 const initialCompanyInfo: CompanyInfo = {
+<<<<<<< HEAD
   name: 'Sistems Nova', cuit: '30-71122334-9', ivaCondition: 'Responsable Inscripto', address: 'Av. Rivadavia 1234, CABA',
   logo: null, showLogoInSidebar: true,
   defaultMarkup: 30, 
@@ -114,6 +139,41 @@ export const MODULE_METADATA: Record<string, { label: string; icon: any }> = {
   'bulk-modification': { label: 'Modif. Masiva', icon: Search },
   'users': { label: 'Personal y Accesos', icon: Search },
   'catalog-config': { label: 'Marcas & Rubros', icon: Search }, 
+=======
+  name: 'FerroGest Pro', cuit: '30-71122334-9', ivaCondition: 'Responsable Inscripto', address: 'Av. Rivadavia 1234, CABA',
+  logo: null, showLogoInSidebar: true,
+  arca: { enabled: true, puntoVenta: 5, iibb: '901-123456-7', crtValidUntil: '2025-12-31' },
+  printConfigs: { factura: { ...DEFAULT_PRINT_CONFIG }, remito: { ...DEFAULT_PRINT_CONFIG }, recibo: { ...DEFAULT_PRINT_CONFIG }, etiqueta: { ...DEFAULT_PRINT_CONFIG, pageSize: '80mm' } }
+};
+
+export const MODULE_METADATA: Record<string, { label: string; icon: any }> = {
+  'dashboard': { label: 'Dashboard', icon: LayoutDashboard },
+  'inventory': { label: 'Inventario', icon: Boxes },
+  'sales': { label: 'Ventas', icon: BadgeDollarSign },
+  'purchases': { label: 'Compras', icon: ShoppingCart },
+  'clients': { label: 'Clientes', icon: Users },
+  'suppliers': { label: 'Proveedores', icon: Truck },
+  'cashier': { label: 'Cajas', icon: Wallet },
+  'reports': { label: 'Informes', icon: BarChart3 },
+  'settings': { label: 'Configuración', icon: SettingsIcon },
+  'branches': { label: 'Sucursales', icon: Store },
+  'prices': { label: 'Precios', icon: RefreshCcw },
+  'bulk-import': { label: 'Importar', icon: FileUp },
+  'warehouse': { label: 'Depósito', icon: WarehouseIcon },
+  'purchase-orders': { label: 'Pedidos Compra', icon: ListChecks },
+  'ecommerce': { label: 'E-Commerce', icon: Globe },
+  'loyalty': { label: 'Fidelización', icon: Gift },
+  'remitos': { label: 'Remitos', icon: ClipboardList },
+  'integrations': { label: 'Integraciones', icon: Plug },
+  'quotes': { label: 'Cotizaciones', icon: MessageSquareText },
+  'orders': { label: 'Pedidos', icon: ListTodo },
+  'installments': { label: 'Cuotas', icon: CreditCard },
+  'balances': { label: 'Saldos', icon: Scale },
+  'missing-items': { label: 'Faltantes', icon: ClipboardCheck },
+  'stock-adjustment': { label: 'Ajuste Stock', icon: PlusCircle },
+  'bulk-modification': { label: 'Modif. Masiva', icon: Layers },
+  'users': { label: 'Personal y Accesos', icon: UserCog },
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 };
 
 const AppContent: React.FC = () => {
@@ -123,6 +183,7 @@ const AppContent: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<{name: string, role: Role | 'customer', data?: any}>({ name: '', role: 'vendedor' });
   const [plan, setPlan] = useState<'basic' | 'premium' | 'enterprise'>('premium');
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>(initialCompanyInfo);
+<<<<<<< HEAD
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   useEffect(() => {
@@ -135,6 +196,8 @@ const AppContent: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 
   const handleLoginSuccess = (role: Role | 'customer', name: string, entityData?: any) => {
     setCurrentUser({ name, role, data: entityData });
@@ -164,6 +227,7 @@ const AppContent: React.FC = () => {
     }
   };
 
+<<<<<<< HEAD
   const handleAiAction = (action: string, target: string) => {
     switch (action) {
       case 'NAVIGATE':
@@ -181,14 +245,21 @@ const AppContent: React.FC = () => {
     }
   };
 
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   if (!isLoggedIn) {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
+<<<<<<< HEAD
+=======
+  // --- MODO PORTAL DE CLIENTES ---
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   if (currentUser.role === 'customer') {
     return <CustomerPortal client={currentUser.data} onLogout={handleLogout} companyInfo={companyInfo} />;
   }
 
+<<<<<<< HEAD
   const renderModule = (id: string) => {
     switch (id) {
       case 'dashboard': return <Dashboard openTab={openTab} />;
@@ -197,6 +268,17 @@ const AppContent: React.FC = () => {
       case 'stock-adjustment': return <StockAdjustment />;
       case 'bulk-modification': return <BulkModification />;
       case 'sales': return <Sales companyInfo={companyInfo} />;
+=======
+  // --- MODO ERP (STAFF) ---
+  const renderModule = (id: string) => {
+    switch (id) {
+      case 'dashboard': return <Dashboard openTab={openTab} />;
+      case 'inventory': return <Inventory />;
+      case 'missing-items': return <MissingItems />;
+      case 'stock-adjustment': return <StockAdjustment />;
+      case 'bulk-modification': return <BulkModification />;
+      case 'sales': return <Sales />;
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
       case 'purchases': return <Purchases />;
       case 'clients': return <Clients onNavigate={openTab} />;
       case 'suppliers': return <Suppliers />;
@@ -217,13 +299,17 @@ const AppContent: React.FC = () => {
       case 'integrations': return <Integrations />;
       case 'quotes': return <Quotes />;
       case 'orders': return <Orders />;
+<<<<<<< HEAD
       case 'catalog-config': return <CatalogConfig />; 
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
       case 'settings': return <Settings plan={plan} setPlan={setPlan} isAdmin={currentUser.role === 'admin'} companyInfo={companyInfo} setCompanyInfo={setCompanyInfo} />;
       default: return null;
     }
   };
 
   return (
+<<<<<<< HEAD
     <div className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden relative">
       <CommandPalette 
         isOpen={isCommandPaletteOpen} 
@@ -231,6 +317,9 @@ const AppContent: React.FC = () => {
         onAction={handleAiAction}
       />
 
+=======
+    <div className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden">
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
       <Sidebar 
         activeTab={activeTabId} 
         setActiveTab={openTab} 
@@ -239,6 +328,7 @@ const AppContent: React.FC = () => {
         onLogout={handleLogout}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
+<<<<<<< HEAD
         <header className="h-14 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-4">
              <button 
@@ -258,6 +348,8 @@ const AppContent: React.FC = () => {
           </div>
         </header>
 
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
         <TabBar 
           openTabs={openTabs} 
           activeTabId={activeTabId} 

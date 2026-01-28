@@ -5,22 +5,33 @@ import {
   ArrowUpRight, Tag, Boxes, X, 
   Info, Save, DollarSign, Warehouse, Globe,
   Camera, Scale, Loader2, ListOrdered, Percent,
+<<<<<<< HEAD
   ImageIcon, Upload, MoreHorizontal, LayoutGrid, Zap,
   ShoppingCart
 } from 'lucide-react';
 import { Product } from '../types';
 import { useFirebase } from '../context/FirebaseContext';
 import { CompanyInfo } from '../App';
+=======
+  ImageIcon, Upload, MoreHorizontal, LayoutGrid, Zap
+} from 'lucide-react';
+import { Product } from '../types';
+import { useFirebase } from '../context/FirebaseContext';
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 
 type ModalTab = 'general' | 'costs' | 'inventory' | 'fractioned' | 'ecommerce';
 
 const ITEMS_PER_PAGE = 20;
 
+<<<<<<< HEAD
 interface InventoryProps {
   companyInfo?: CompanyInfo;
 }
 
 const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
+=======
+const Inventory: React.FC = () => {
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   const { 
     loading: firebaseContextLoading, 
     addProduct, updateProduct, deleteProduct, suppliers,
@@ -43,17 +54,28 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
   // State for different sections of the form
   const [generalFormData, setGeneralFormData] = useState<Partial<Product>>({
     name: '', sku: '', category: '', brand: '', saleCurrency: 'ARS', supplierProductCode: '', imageUrl: '',
+<<<<<<< HEAD
     primaryUnit: 'unidad', saleUnit: 'unidad',
   });
   const [costData, setCostData] = useState({
     baseCost: 0, ivaRate: 21, discounts: [0, 0, 0], markup: companyInfo?.defaultMarkup || 30, supplierId: '', purchaseCurrency: 'ARS',
+=======
+    primaryUnit: 'unidad', saleUnit: 'unidad', // Default values
+  });
+  const [costData, setCostData] = useState({
+    baseCost: 0, ivaRate: 21, discounts: [0, 0, 0], markup: 30, supplierId: '', purchaseCurrency: 'ARS',
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   });
   const [inventoryData, setInventoryData] = useState({
     stock: 0, minStock: 5, location: '', reorderPoint: 0, targetStock: 0, packQuantity: 1,
   });
   const [fractionedData, setFractionedData] = useState({
     isFractionable: false, 
+<<<<<<< HEAD
     saleUnitConversionFactor: 1,
+=======
+    saleUnitConversionFactor: 1, // Default 1 (1 saleUnit = 1 primaryUnit)
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   });
   const [ecommerceData, setEcommerceData] = useState({
     isOnline: false, onlinePriceAdjustment: 0, mlSync: false,
@@ -93,9 +115,16 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
     const priceWithoutIva = currentNet * (1 + costData.markup / 100);
     const finalSalePricePrimaryUnit = priceWithoutIva * (1 + costData.ivaRate / 100);
     
+<<<<<<< HEAD
     const finalSalePriceSaleUnit = fractionedData.isFractionable && fractionedData.saleUnitConversionFactor
       ? finalSalePricePrimaryUnit * fractionedData.saleUnitConversionFactor
       : finalSalePricePrimaryUnit;
+=======
+    // Calculate price per sale unit if fractionable
+    const finalSalePriceSaleUnit = fractionedData.isFractionable && fractionedData.saleUnitConversionFactor
+      ? finalSalePricePrimaryUnit * fractionedData.saleUnitConversionFactor
+      : finalSalePricePrimaryUnit; // If not fractionable or factor is 0, it's the same as primary unit.
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 
     return { 
       netCost: currentNet, 
@@ -108,7 +137,11 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
   const resetModalStates = () => {
     setActiveProduct(null);
     setGeneralFormData({ name: '', sku: '', category: '', brand: '', saleCurrency: 'ARS', supplierProductCode: '', imageUrl: '', primaryUnit: 'unidad', saleUnit: 'unidad' });
+<<<<<<< HEAD
     setCostData({ baseCost: 0, ivaRate: 21, discounts: [0, 0, 0], markup: companyInfo?.defaultMarkup || 30, supplierId: '', purchaseCurrency: 'ARS' });
+=======
+    setCostData({ baseCost: 0, ivaRate: 21, discounts: [0, 0, 0], markup: 30, supplierId: '', purchaseCurrency: 'ARS' });
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
     setInventoryData({ stock: 0, minStock: 5, location: '', reorderPoint: 0, targetStock: 0, packQuantity: 1 });
     setFractionedData({ isFractionable: false, saleUnitConversionFactor: 1 });
     setEcommerceData({ isOnline: false, onlinePriceAdjustment: 0, mlSync: false });
@@ -132,8 +165,13 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
       setCostData({
         baseCost: product.costPrice || 0,
         ivaRate: 21, 
+<<<<<<< HEAD
         discounts: [], 
         markup: (product.salePrice && product.costPrice) ? ((product.salePrice / (product.costPrice * 1.21) - 1) * 100) : (companyInfo?.defaultMarkup || 30),
+=======
+        discounts: [], // Discounts usually come from supplier, not saved per product directly on this screen for base cost calc
+        markup: (product.salePrice && product.costPrice) ? ((product.salePrice / (product.costPrice * 1.21) - 1) * 100) : 30, // Recalculate markup from existing prices
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
         supplierId: product.supplierId || '',
         purchaseCurrency: product.purchaseCurrency || 'ARS',
       });
@@ -149,6 +187,10 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
         isFractionable: product.isFractionable || false,
         saleUnitConversionFactor: product.saleUnitConversionFactor || 1,
       });
+<<<<<<< HEAD
+=======
+      // Fix: Safely access new e-commerce properties with optional chaining and provide default values
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
       setEcommerceData({
         isOnline: product.isOnline || false,
         onlinePriceAdjustment: product.onlinePriceAdjustment || 0,
@@ -174,6 +216,10 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
   const handleSave = async () => {
     setIsSaving(true);
 
+<<<<<<< HEAD
+=======
+    // Validate required fields
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
     if (!generalFormData.name || !generalFormData.sku || !generalFormData.primaryUnit || !generalFormData.saleUnit) {
       alert("Por favor, complete los campos obligatorios: Nombre, SKU, Unidad Primaria y Unidad de Venta.");
       setIsSaving(false);
@@ -184,12 +230,17 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
         setIsSaving(false);
         return;
     }
+<<<<<<< HEAD
     if (fractionedData.isFractionable && (!fractionedData.saleUnitConversionFactor || fractionedData.saleUnitConversionFactor <= 0)) {
+=======
+    if (fractionedData.isFractionable && (fractionedData.saleUnitConversionFactor === undefined || fractionedData.saleUnitConversionFactor <= 0)) {
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
         alert("Si la venta es fraccionable, el factor de conversión debe ser mayor a 0.");
         setIsSaving(false);
         return;
     }
 
+<<<<<<< HEAD
     // FIREBASE FIX: Ensure no 'undefined' values are passed. Use 'null' or fallback defaults.
     const dataToSave: any = {
       sku: generalFormData.sku || '',
@@ -216,6 +267,34 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
       isOnline: Boolean(ecommerceData.isOnline),
       onlinePriceAdjustment: ecommerceData.isOnline ? Number(ecommerceData.onlinePriceAdjustment) : null,
       mlSync: Boolean(ecommerceData.mlSync),
+=======
+    const dataToSave: Omit<Product, 'id'> = {
+      sku: generalFormData.sku || '',
+      name: generalFormData.name || '',
+      supplierId: costData.supplierId || '',
+      costPrice: costData.baseCost, // Ensure this is stored
+      salePrice: calcResults.finalSalePricePrimaryUnit, // Store price per primary unit
+      stock: inventoryData.stock,
+      category: generalFormData.category || 'General',
+      brand: generalFormData.brand || 'N/A',
+      reorderPoint: inventoryData.reorderPoint,
+      targetStock: inventoryData.targetStock,
+      packQuantity: inventoryData.packQuantity,
+      purchaseCurrency: costData.purchaseCurrency,
+      saleCurrency: generalFormData.saleCurrency || 'ARS',
+      supplierProductCode: generalFormData.supplierProductCode || '',
+      minStock: inventoryData.minStock,
+      location: inventoryData.location,
+      imageUrl: generalFormData.imageUrl,
+      primaryUnit: generalFormData.primaryUnit,
+      saleUnit: generalFormData.saleUnit,
+      isFractionable: fractionedData.isFractionable,
+      saleUnitConversionFactor: fractionedData.isFractionable ? fractionedData.saleUnitConversionFactor : undefined,
+      // Add new e-commerce properties
+      isOnline: ecommerceData.isOnline,
+      onlinePriceAdjustment: ecommerceData.isOnline ? ecommerceData.onlinePriceAdjustment : undefined,
+      mlSync: ecommerceData.mlSync,
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
     };
 
     try {
@@ -228,18 +307,25 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
       resetModalStates();
       loadProducts(true);
     } catch (e) {
+<<<<<<< HEAD
       alert("Error al guardar en la base de datos. Verifique los campos.");
+=======
+      alert("Error al guardar");
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
       console.error("Error saving product:", e);
     } finally {
       setIsSaving(false);
     }
   };
 
+<<<<<<< HEAD
   const handleOrderProduct = (product: Product) => {
     alert(`Producto "${product.name}" añadido a la lista de pedidos de reposición.`);
     // Here you could trigger a navigation to purchase-orders or add to a global draft order state
   };
 
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   return (
     <div className="space-y-6">
       <header className="flex justify-between items-center">
@@ -292,6 +378,7 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                     }
                 </td>
                 <td className="px-8 py-6 text-center">
+<<<<<<< HEAD
                   <div className="flex items-center justify-center gap-2">
                     <button 
                       onClick={() => handleOrderProduct(product)} 
@@ -315,6 +402,10 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
+=======
+                  <button onClick={() => openProductModal(product)} className="p-2 text-slate-400 hover:text-orange-600"><Edit3 className="w-4 h-4" /></button>
+                  <button onClick={() => deleteProduct(product.id)} className="p-2 text-slate-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                 </td>
               </tr>
             ))}
@@ -331,7 +422,11 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
               <button onClick={() => setShowModal(false)}><X className="w-6 h-6" /></button>
             </div>
             
+<<<<<<< HEAD
             <div className="flex h-[600px]">
+=======
+            <div className="flex h-[600px]"> {/* Fixed height for modal content */}
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
               <div className="w-1/4 bg-slate-50 border-r border-slate-100 p-6 space-y-2">
                 {[
                   { id: 'general', label: 'General', icon: Package },
@@ -352,6 +447,10 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
               </div>
               
               <div className="flex-1 p-10 overflow-y-auto space-y-8 custom-scrollbar">
+<<<<<<< HEAD
+=======
+                {/* General Tab */}
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                 {activeModalTab === 'general' && (
                   <div className="space-y-8 animate-in fade-in duration-300">
                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
@@ -376,6 +475,10 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                           className="w-full px-5 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold" 
                         />
                       </div>
+<<<<<<< HEAD
+=======
+                      {/* Fix: Added Unit selectors in General Tab */}
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Unidad Primaria (Stock) <span className="text-red-500">*</span></label>
                         <select 
@@ -465,6 +568,17 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                           ) : (
                             <ImageIcon className="w-8 h-8 text-slate-300" />
                           )}
+<<<<<<< HEAD
+=======
+                           {generalFormData.imageUrl && (
+                            <button 
+                                onClick={() => setGeneralFormData(prev => ({ ...prev, imageUrl: '' }))}
+                                className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                          )}
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                         </div>
                         <div>
                           <button 
@@ -474,6 +588,10 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                             <Upload className="w-4 h-4" /> Subir Imagen
                           </button>
                           <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+<<<<<<< HEAD
+=======
+                          <p className="text-[10px] text-slate-400 italic mt-2">Formatos: JPG, PNG. Max 2MB.</p>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                         </div>
                       </div>
                     </div>
@@ -488,7 +606,11 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                     </h3>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
+<<<<<<< HEAD
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Costo Base Unitario ($) <span className="text-red-500">*</span></label>
+=======
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Costo Base Unitario ($) ({generalFormData.primaryUnit}) <span className="text-red-500">*</span></label>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                         <input 
                           type="number" 
                           value={costData.baseCost || ''} 
@@ -498,7 +620,11 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                         />
                       </div>
                       <div className="space-y-2">
+<<<<<<< HEAD
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">IVA (%)</label>
+=======
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Porcentaje de IVA (%)</label>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                         <input 
                           type="number" 
                           value={costData.ivaRate || ''} 
@@ -509,9 +635,50 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                       </div>
                     </div>
                     
+<<<<<<< HEAD
                     <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ganancia (Markup %)</label>
+=======
+                    <div className="space-y-4">
+                      <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest ml-1 flex items-center gap-2">
+                        <ListOrdered className="w-4 h-4 text-blue-600" /> Descuentos en Cascada
+                      </h4>
+                      <p className="text-[10px] text-slate-500 italic ml-1">Aplica descuentos sucesivos al costo base (ej: 10% + 5% + 2%).</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {costData.discounts.map((discount, index) => (
+                          <div key={index} className="relative">
+                            <input 
+                              type="number" 
+                              value={discount || ''} 
+                              onChange={e => {
+                                const newDiscounts = [...costData.discounts];
+                                newDiscounts[index] = Number(e.target.value);
+                                setCostData({...costData, discounts: newDiscounts});
+                              }}
+                              placeholder="%" 
+                              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none font-bold text-center" 
+                            />
+                            {discount > 0 && (
+                              <button 
+                                onClick={() => {
+                                  const newDiscounts = costData.discounts.filter((_, i) => i !== index);
+                                  setCostData({...costData, discounts: newDiscounts.concat(0).slice(0,3)}); // Ensure always 3 inputs
+                                }}
+                                className="absolute top-1/2 right-2 -translate-y-1/2 p-1 text-red-500 hover:text-red-700"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Margen de Ganancia (Markup %)</label>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                         <input 
                           type="number" 
                           value={costData.markup || ''} 
@@ -533,12 +700,41 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                           ))}
                         </select>
                       </div>
+<<<<<<< HEAD
+=======
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Moneda de Compra</label>
+                        <select 
+                          value={costData.purchaseCurrency || 'ARS'} 
+                          onChange={e => setCostData({...costData, purchaseCurrency: e.target.value})}
+                          className="w-full px-5 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold bg-white"
+                        >
+                          <option value="ARS">ARS - Pesos Argentinos</option>
+                          <option value="USD">USD - Dólares Estadounidenses</option>
+                        </select>
+                      </div>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                     </div>
 
                     <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white flex justify-between items-center relative overflow-hidden shadow-xl">
                       <div className="relative z-10 space-y-2">
+<<<<<<< HEAD
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Precio Final Sugerido</p>
                         <p className="text-4xl font-black text-orange-500">${calcResults.finalSalePricePrimaryUnit.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+=======
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Precio de Venta Sugerido (IVA Incl.) por {generalFormData.primaryUnit}</p>
+                        <p className="text-4xl font-black text-orange-500">${calcResults.finalSalePricePrimaryUnit.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+                           <Percent className="w-4 h-4" />
+                           <span>Margen Neto: {costData.markup}%</span>
+                        </div>
+                        {fractionedData.isFractionable && fractionedData.saleUnitConversionFactor && (
+                          <div className="pt-4 border-t border-white/10 mt-4">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Precio por {generalFormData.saleUnit} (Fraccionada)</p>
+                            <p className="text-2xl font-black text-white">${calcResults.finalSalePriceSaleUnit.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                          </div>
+                        )}
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                       </div>
                       <DollarSign className="absolute -bottom-6 -right-6 w-32 h-32 text-white/5 rotate-12" />
                     </div>
@@ -553,7 +749,11 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                     </h3>
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
+<<<<<<< HEAD
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Stock Actual</label>
+=======
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Stock Actual ({generalFormData.primaryUnit})</label>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                         <input 
                           type="number" 
                           value={inventoryData.stock || ''} 
@@ -563,7 +763,11 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                         />
                       </div>
                       <div className="space-y-2">
+<<<<<<< HEAD
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mínimo de Alerta</label>
+=======
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Stock Mínimo de Alerta ({generalFormData.primaryUnit})</label>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                         <input 
                           type="number" 
                           value={inventoryData.minStock || ''} 
@@ -573,11 +777,49 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                         />
                       </div>
                       <div className="space-y-2">
+<<<<<<< HEAD
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ubicación</label>
                         <input 
                           value={inventoryData.location || ''} 
                           onChange={e => setInventoryData({...inventoryData, location: e.target.value})}
                           placeholder="Ej: A-05" 
+=======
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ubicación en Depósito</label>
+                        <input 
+                          value={inventoryData.location || ''} 
+                          onChange={e => setInventoryData({...inventoryData, location: e.target.value})}
+                          placeholder="Ej: A-05-Estante 2" 
+                          className="w-full px-5 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Punto de Reorden ({generalFormData.primaryUnit})</label>
+                        <input 
+                          type="number" 
+                          value={inventoryData.reorderPoint || ''} 
+                          onChange={e => setInventoryData({...inventoryData, reorderPoint: Number(e.target.value)})}
+                          placeholder="10" 
+                          className="w-full px-5 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none font-bold" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Stock Deseado ({generalFormData.primaryUnit})</label>
+                        <input 
+                          type="number" 
+                          value={inventoryData.targetStock || ''} 
+                          onChange={e => setInventoryData({...inventoryData, targetStock: Number(e.target.value)})}
+                          placeholder="20" 
+                          className="w-full px-5 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none font-bold" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Cantidad por Bulto/Pack ({generalFormData.primaryUnit})</label>
+                        <input 
+                          type="number" 
+                          value={inventoryData.packQuantity || ''} 
+                          onChange={e => setInventoryData({...inventoryData, packQuantity: Number(e.target.value)})}
+                          placeholder="1" 
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                           className="w-full px-5 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold" 
                         />
                       </div>
@@ -585,12 +827,23 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                   </div>
                 )}
 
+<<<<<<< HEAD
                 {/* Fractioned Tab */}
                 {activeModalTab === 'fractioned' && (
                   <div className="space-y-8 animate-in fade-in duration-300">
                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
                       <Scale className="w-4 h-4 text-purple-600" /> Venta Fraccionada
                     </h3>
+=======
+                {/* Fractioned Sales Tab */}
+                {activeModalTab === 'fractioned' && (
+                  <div className="space-y-8 animate-in fade-in duration-300">
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+                      <Scale className="w-4 h-4 text-purple-600" /> Venta Fraccionada (por unidad de medida)
+                    </h3>
+                    <p className="text-slate-500 text-sm">Permite vender este producto en unidades diferentes a su unidad primaria de stock (ej. comprar en m2, vender en tablas).</p>
+
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                     <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex items-start gap-4">
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
@@ -602,12 +855,18 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                         <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-purple-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                       </label>
                       <div className="flex-1">
+<<<<<<< HEAD
                         <p className="text-sm font-black text-slate-800 uppercase">Habilitar Fraccionado</p>
                         <p className="text-xs text-slate-500 mt-1">Permite vender en una unidad distinta al stock.</p>
+=======
+                        <p className="text-sm font-black text-slate-800 uppercase">Habilitar Venta Fraccionada</p>
+                        <p className="text-xs text-slate-500 mt-1">Si está activo, podrás vender por la "Unidad de Venta" configurada en el tab General, que es diferente a la "Unidad Primaria" de stock.</p>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                       </div>
                     </div>
 
                     {fractionedData.isFractionable && (
+<<<<<<< HEAD
                       <div className="pt-6 border-t border-slate-100 animate-in fade-in">
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Factor de Conversión (1 {generalFormData.saleUnit} = ? {generalFormData.primaryUnit})</label>
                         <input 
@@ -617,6 +876,26 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                           placeholder="1.00" 
                           className="w-full mt-2 px-5 py-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-purple-500 outline-none font-bold" 
                         />
+=======
+                      <div className="pt-6 border-t border-slate-100 space-y-6 animate-in fade-in duration-300">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Factor de Conversión: 1 {generalFormData.saleUnit} equivale a... ({generalFormData.primaryUnit}) <span className="text-red-500">*</span></label>
+                          <input 
+                            type="number" 
+                            value={fractionedData.saleUnitConversionFactor || ''} 
+                            onChange={e => setFractionedData({...fractionedData, saleUnitConversionFactor: Number(e.target.value)})}
+                            placeholder="0.00" 
+                            className="w-full px-5 py-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-purple-500 outline-none font-bold" 
+                          />
+                        </div>
+                        <div className="bg-purple-50 p-6 rounded-[2rem] border border-purple-100 flex items-start gap-4">
+                          <Info className="w-6 h-6 text-purple-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-bold text-purple-900">Ejemplo: Madera</p>
+                            <p className="text-xs text-purple-700 mt-1">Si la unidad primaria es 'm2' y la unidad de venta es 'tabla', y 1 tabla equivale a 0.43 m2, ingresa `0.43`.</p>
+                          </div>
+                        </div>
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                       </div>
                     )}
                   </div>
@@ -626,8 +905,15 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                 {activeModalTab === 'ecommerce' && (
                   <div className="space-y-8 animate-in fade-in duration-300">
                     <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
+<<<<<<< HEAD
                       <Globe className="w-4 h-4 text-yellow-600" /> E-Commerce
                     </h3>
+=======
+                      <Globe className="w-4 h-4 text-yellow-600" /> Configuración E-Commerce
+                    </h3>
+                    <p className="text-slate-500 text-sm">Gestiona la presencia online de este producto en tu tienda web y MercadoLibre.</p>
+
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                     <div className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 flex items-start gap-4">
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input 
@@ -639,9 +925,61 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
                         <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-orange-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                       </label>
                       <div className="flex-1">
+<<<<<<< HEAD
                         <p className="text-sm font-black text-slate-800 uppercase">Publicar Online</p>
                       </div>
                     </div>
+=======
+                        <p className="text-sm font-black text-slate-800 uppercase">Publicar en Tienda Web Propia</p>
+                        <p className="text-xs text-slate-500 mt-1">Si está activo, el producto aparecerá en tu tienda online.</p>
+                      </div>
+                    </div>
+
+                    {ecommerceData.isOnline && (
+                      <div className="pt-6 border-t border-slate-100 space-y-6 animate-in fade-in duration-300">
+                        <div className="grid grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ajuste de Precio Online (%)</label>
+                            <input 
+                              type="number" 
+                              value={ecommerceData.onlinePriceAdjustment || ''} 
+                              onChange={e => setEcommerceData({...ecommerceData, onlinePriceAdjustment: Number(e.target.value)})}
+                              placeholder="0" 
+                              className="w-full px-5 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold" 
+                            />
+                            <p className="text-[10px] text-slate-400 italic">Ej: +5% para cubrir costos de pasarela de pago.</p>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sincronizar con MercadoLibre</label>
+                            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center gap-3">
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input 
+                                  type="checkbox" 
+                                  checked={ecommerceData.mlSync || false}
+                                  onChange={(e) => setEcommerceData({...ecommerceData, mlSync: e.target.checked})}
+                                  className="sr-only peer" 
+                                />
+                                <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:bg-yellow-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                              </label>
+                              <div className="flex-1">
+                                <p className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
+                                  <Zap className="w-4 h-4 text-yellow-500" />
+                                  ML Auto-Sync
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="bg-yellow-50 p-6 rounded-[2rem] border border-yellow-100 flex items-start gap-4">
+                          <AlertTriangle className="w-6 h-6 text-yellow-600 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-bold text-yellow-900">MercadoLibre:</p>
+                            <p className="text-xs text-yellow-700 mt-1">La sincronización de precios y stock con ML se configura en el módulo de E-commerce.</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
                   </div>
                 )}
               </div>
@@ -651,10 +989,17 @@ const Inventory: React.FC<InventoryProps> = ({ companyInfo }) => {
               <button onClick={() => setShowModal(false)} className="px-8 py-3 bg-white border border-slate-200 rounded-2xl font-black text-slate-500 uppercase text-xs tracking-widest">Cancelar</button>
               <button 
                 onClick={handleSave} 
+<<<<<<< HEAD
                 className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-black shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest"
               >
                 {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
                 Guardar
+=======
+                className="px-8 py-3 bg-slate-900 text-white rounded-2xl font-black shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all flex items-center justify-center gap-3 uppercase text-xs tracking-widest"
+              >
+                {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                {isSaving ? 'Guardando...' : 'Guardar Producto'}
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
               </button>
             </div>
           </div>
