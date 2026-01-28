@@ -1,0 +1,7 @@
+{
+  "name": "Copy of gestionferreteriacrm 44444",
+  "description": "ERP para ferreterías sincronizado a tiempo real en todas las terminales mediante Firebase Firestore. Gestión total de inventario, cajas y facturación AFIP.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
