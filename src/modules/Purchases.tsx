@@ -1,8 +1,8 @@
 
 import React, { useState, useRef } from 'react';
-import {
-  Sparkles, Loader2, Plus, Trash2,
-  Save, X, Info, PackagePlus,
+import { 
+  Sparkles, Loader2, Plus, Trash2, 
+  Save, X, Info, PackagePlus, 
   FileText, CheckCircle2, AlertTriangle,
   UploadCloud, ImageIcon, RefreshCw
 } from 'lucide-react';
@@ -28,8 +28,8 @@ export const Purchases: React.FC = () => {
   const [purchaseMode, setPurchaseMode] = useState<'ia' | 'manual'>('ia');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<{ name: string, type: string, preview: string } | null>(null);
-
+  const [selectedFile, setSelectedFile] = useState<{name: string, type: string, preview: string} | null>(null);
+  
   const [purchaseData, setPurchaseData] = useState<{
     invoiceNumber: string;
     supplierName: string;
@@ -63,7 +63,7 @@ export const Purchases: React.FC = () => {
     try {
       const base64Data = selectedFile.preview.split(',')[1];
       const result = await analyzeInvoice(base64Data, selectedFile.type);
-
+      
       const enrichedItems = await Promise.all(result.items.map(async (item: any) => {
         const { products } = await fetchProductsPaginatedAndFiltered({
           limit: 1,
@@ -93,7 +93,7 @@ export const Purchases: React.FC = () => {
       for (const item of purchaseData.items) {
         if (item.matchedProduct) {
           const newStock = (item.matchedProduct.stock || 0) + item.quantity;
-          await updateProduct(item.matchedProduct.id, {
+          await updateProduct(item.matchedProduct.id, { 
             costPrice: item.unitPrice,
             stock: newStock
           });
@@ -133,9 +133,9 @@ export const Purchases: React.FC = () => {
               <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
                 <UploadCloud className="w-4 h-4 text-orange-600" /> Cargar Documento
               </h3>
-
+              
               {!selectedFile ? (
-                <div
+                <div 
                   onClick={() => fileInputRef.current?.click()}
                   className="border-4 border-dashed border-slate-100 rounded-[2rem] p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:border-orange-200 hover:bg-orange-50/20 transition-all group"
                 >
@@ -156,14 +156,14 @@ export const Purchases: React.FC = () => {
                         <p className="font-bold text-center text-sm">{selectedFile.name}</p>
                       </div>
                     )}
-                    <button
+                    <button 
                       onClick={() => setSelectedFile(null)}
                       className="absolute top-4 right-4 p-2 bg-red-600 text-white rounded-xl shadow-lg hover:bg-red-500 transition-all"
                     >
                       <X className="w-5 h-5" />
                     </button>
                   </div>
-                  <button
+                  <button 
                     onClick={processWithIA}
                     disabled={isAnalyzing}
                     className="w-full py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-orange-600/20 hover:bg-orange-500 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-50"
@@ -184,30 +184,30 @@ export const Purchases: React.FC = () => {
             <div className="space-y-4">
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Proveedor</label>
-                <input
-                  value={purchaseData.supplierName}
-                  onChange={e => setPurchaseData({ ...purchaseData, supplierName: e.target.value })}
+                <input 
+                  value={purchaseData.supplierName} 
+                  onChange={e => setPurchaseData({...purchaseData, supplierName: e.target.value})}
                   placeholder="Ej: Sinteplast S.A."
-                  className="w-full px-5 py-3.5 border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none font-bold"
+                  className="w-full px-5 py-3.5 border-2 border-slate-100 rounded-2xl focus:ring-2 focus:ring-orange-500 outline-none font-bold" 
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">N° Comprobante</label>
-                  <input
-                    value={purchaseData.invoiceNumber}
-                    onChange={e => setPurchaseData({ ...purchaseData, invoiceNumber: e.target.value })}
+                  <input 
+                    value={purchaseData.invoiceNumber} 
+                    onChange={e => setPurchaseData({...purchaseData, invoiceNumber: e.target.value})}
                     placeholder="0001-000482"
-                    className="w-full px-5 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold"
+                    className="w-full px-5 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold" 
                   />
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha</label>
-                  <input
+                  <input 
                     type="date"
-                    value={purchaseData.date}
-                    onChange={e => setPurchaseData({ ...purchaseData, date: e.target.value })}
-                    className="w-full px-5 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold"
+                    value={purchaseData.date} 
+                    onChange={e => setPurchaseData({...purchaseData, date: e.target.value})}
+                    className="w-full px-5 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold" 
                   />
                 </div>
               </div>
@@ -291,7 +291,7 @@ export const Purchases: React.FC = () => {
                   <p className="text-3xl font-black text-orange-500">${(subtotal * 1.21).toLocaleString()}</p>
                 </div>
               </div>
-              <button
+              <button 
                 onClick={handleFinishPurchase}
                 disabled={isFinishing || purchaseData.items.length === 0}
                 className="w-full md:w-auto px-12 py-5 bg-orange-600 text-white rounded-2xl font-black text-lg uppercase tracking-[0.2em] shadow-xl shadow-orange-600/20 hover:bg-orange-500 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-30"

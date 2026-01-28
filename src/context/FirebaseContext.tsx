@@ -1,10 +1,14 @@
 
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
-import { Product, Client, Supplier, Transaction, PriceList, Branch, Order, InstallmentPlan, InternalUser, PaymentDetail, SalesZone, Sale, Remito } from '../types';
+<<<<<<< HEAD
+import { Product, Client, Supplier, Transaction, PriceList, Branch, Order, InstallmentPlan, InternalUser, PaymentDetail, SalesZone, Sale, Remito, Box, Brand, Category } from '../types';
+=======
+import { Product, Client, Supplier, Transaction, PriceList, Branch, Order, InstallmentPlan, InternalUser, PaymentDetail, SalesZone, Sale, Remito, Box } from '../types';
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 import { db } from '../lib/firebase';
-import {
-  collection, onSnapshot, addDoc, updateDoc, doc,
-  deleteDoc, query, orderBy, limit, startAfter, where, getDocs
+import { 
+  collection, onSnapshot, addDoc, updateDoc, doc, 
+  deleteDoc, query, orderBy, limit, startAfter, where, getDocs, setDoc
 } from 'firebase/firestore';
 
 interface FirebaseContextType {
@@ -18,25 +22,31 @@ interface FirebaseContextType {
   installmentPlans: InstallmentPlan[];
   users: InternalUser[];
   salesZones: SalesZone[];
-  sales: Sale[]; // Exposed sales collection
-  remitos: Remito[]; // Exposed remitos collection
+  sales: Sale[]; 
+  remitos: Remito[]; 
+  boxes: Box[];
+<<<<<<< HEAD
+  brands: Brand[];
+  categories: Category[];
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 
   loading: boolean;
   error: string | null;
 
-  fetchProductsPaginatedAndFiltered: (options: {
-    limit: number;
-    startAfterDoc?: any;
-    searchTerm?: string;
-    orderByField?: string;
-    orderDirection?: 'asc' | 'desc';
+  fetchProductsPaginatedAndFiltered: (options: { 
+    limit: number; 
+    startAfterDoc?: any; 
+    searchTerm?: string; 
+    orderByField?: string; 
+    orderDirection?: 'asc' | 'desc'; 
   }) => Promise<{ products: Product[], lastVisible: any, hasMore: boolean }>;
   getProductById: (id: string) => Promise<Product | null>;
   addProduct: (p: Omit<Product, 'id'>) => Promise<void>;
   updateProduct: (id: string, p: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
-
-  addSale: (saleData: Omit<Sale, 'id'>) => Promise<string>; // Now returns ID of the created sale
+  
+  addSale: (saleData: Omit<Sale, 'id'>) => Promise<string>; 
   getSaleById: (id: string) => Promise<Sale | null>;
 
   addClient: (c: Omit<Client, 'id'>) => Promise<void>;
@@ -48,29 +58,44 @@ interface FirebaseContextType {
   addPriceList: (pl: Omit<PriceList, 'id'>) => Promise<void>;
   updatePriceList: (id: string, pl: Partial<PriceList>) => Promise<void>;
   deletePriceList: (id: string) => Promise<void>;
-  addBranch: (b: Omit<Branch, 'id'>) => Promise<void>;
-  updateBranch: (id: string, b: Partial<Branch>) => Promise<void>;
-  deleteBranch: (id: string) => Promise<void>;
-  addOrder: (o: Omit<Order, 'id'>) => Promise<void>;
-  updateOrder: (id: string, o: Partial<Order>) => Promise<void>;
-  deleteOrder: (id: string) => Promise<void>;
-  addInstallmentPlan: (ip: Omit<InstallmentPlan, 'id'>) => Promise<void>;
-  updateInstallmentPlan: (id: string, ip: Partial<InstallmentPlan>) => Promise<void>;
-  deleteInstallmentPlan: (id: string) => Promise<void>;
-  addTransaction: (t: Omit<Transaction, 'id'>) => Promise<void>;
-  exportAllData: (collectionNames: string[]) => Promise<Record<string, any[]>>;
-  deleteAllDocumentsInCollection: (collectionName: string) => Promise<void>;
+  addBranch: (b: Omit<Branch, 'id'>) => Promise<void>; 
+  updateBranch: (id: string, b: Partial<Branch>) => Promise<void>; 
+  deleteBranch: (id: string) => Promise<void>; 
+  addOrder: (o: Omit<Order, 'id'>) => Promise<void>; 
+  updateOrder: (id: string, o: Partial<Order>) => Promise<void>; 
+  deleteOrder: (id: string) => Promise<void>; 
+  addInstallmentPlan: (ip: Omit<InstallmentPlan, 'id'>) => Promise<void>; 
+  updateInstallmentPlan: (id: string, ip: Partial<InstallmentPlan>) => Promise<void>; 
+  deleteInstallmentPlan: (id: string) => Promise<void>; 
+  addTransaction: (t: Omit<Transaction, 'id'>) => Promise<void>; 
+  exportAllData: (collectionNames: string[]) => Promise<Record<string, any[]>>; 
+  importAllData: (data: Record<string, any[]>) => Promise<void>;
+  deleteAllDocumentsInCollection: (collectionName: string) => Promise<void>; 
   addUser: (u: any) => Promise<void>;
-  updateUser: (id: string, u: Partial<InternalUser>) => Promise<void>;
+  updateUser: (id: string, u: Partial<InternalUser>) => Promise<void>; 
   deleteUser: (id: string) => Promise<void>;
   addSalesZone: (sz: Omit<SalesZone, 'id'>) => Promise<void>;
   updateSalesZone: (id: string, sz: Partial<SalesZone>) => Promise<void>;
   deleteSalesZone: (id: string) => Promise<void>;
 
-  addRemito: (r: Omit<Remito, 'id'>) => Promise<string>; // Add new remito, returns ID
-  updateRemito: (id: string, r: Partial<Remito>) => Promise<void>; // Update existing remito
-  deleteRemito: (id: string) => Promise<void>; // Delete remito
+  addRemito: (r: Omit<Remito, 'id'>) => Promise<string>; 
+  updateRemito: (id: string, r: Partial<Remito>) => Promise<void>; 
+  deleteRemito: (id: string) => Promise<void>; 
   getRemitoById: (id: string) => Promise<Remito | null>;
+  
+  addBox: (b: Omit<Box, 'id'>) => Promise<void>;
+  updateBox: (id: string, b: Partial<Box>) => Promise<void>;
+  deleteBox: (id: string) => Promise<void>;
+<<<<<<< HEAD
+
+  addBrand: (b: Omit<Brand, 'id'>) => Promise<void>;
+  updateBrand: (id: string, b: Partial<Brand>) => Promise<void>;
+  deleteBrand: (id: string) => Promise<void>;
+  addCategory: (c: Omit<Category, 'id'>) => Promise<void>;
+  updateCategory: (id: string, c: Partial<Category>) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 }
 
 const FirebaseContext = createContext<FirebaseContextType | undefined>(undefined);
@@ -86,23 +111,35 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [installmentPlans, setInstallmentPlans] = useState<InstallmentPlan[]>([]);
   const [salesZones, setSalesZones] = useState<SalesZone[]>([]);
   const [users, setUsers] = useState<InternalUser[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]); // New state for sales
-  const [remitos, setRemitos] = useState<Remito[]>([]); // New state for remitos
-
+  const [sales, setSales] = useState<Sale[]>([]); 
+  const [remitos, setRemitos] = useState<Remito[]>([]); 
+  const [boxes, setBoxes] = useState<Box[]>([]);
+<<<<<<< HEAD
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribers = [
-      onSnapshot(collection(db, 'products'), (s) => setProducts(s.docs.map(d => ({ id: d.id, ...d.data() } as Product)))),
-      onSnapshot(collection(db, 'clients'), (s) => setClients(s.docs.map(d => ({ id: d.id, ...d.data() } as Client)))),
-      onSnapshot(collection(db, 'suppliers'), (s) => setSuppliers(s.docs.map(d => ({ id: d.id, ...d.data() } as Supplier)))),
-      onSnapshot(collection(db, 'priceLists'), (s) => setPriceLists(s.docs.map(d => ({ id: d.id, ...d.data() } as PriceList)))),
-      onSnapshot(collection(db, 'branches'), (s) => setBranches(s.docs.map(d => ({ id: d.id, ...d.data() } as Branch)))),
-      onSnapshot(collection(db, 'users'), (s) => setUsers(s.docs.map(d => ({ id: d.id, ...d.data() } as InternalUser)))),
-      onSnapshot(collection(db, 'salesZones'), (s) => setSalesZones(s.docs.map(d => ({ id: d.id, ...d.data() } as SalesZone)))),
-      onSnapshot(collection(db, 'sales'), (s) => setSales(s.docs.map(d => ({ id: d.id, ...d.data() } as Sale)))), // New listener for sales
-      onSnapshot(collection(db, 'remitos'), (s) => setRemitos(s.docs.map(d => ({ id: d.id, ...d.data() } as Remito)))), // New listener for remitos
+      onSnapshot(collection(db, 'products'), (s) => setProducts(s.docs.map(d => ({id: d.id, ...d.data()} as Product)))),
+      onSnapshot(collection(db, 'clients'), (s) => setClients(s.docs.map(d => ({id: d.id, ...d.data()} as Client)))),
+      onSnapshot(collection(db, 'suppliers'), (s) => setSuppliers(s.docs.map(d => ({id: d.id, ...d.data()} as Supplier)))),
+      onSnapshot(collection(db, 'priceLists'), (s) => setPriceLists(s.docs.map(d => ({id: d.id, ...d.data()} as PriceList)))),
+      onSnapshot(collection(db, 'branches'), (s) => setBranches(s.docs.map(d => ({id: d.id, ...d.data()} as Branch)))),
+      onSnapshot(collection(db, 'users'), (s) => setUsers(s.docs.map(d => ({id: d.id, ...d.data()} as InternalUser)))),
+      onSnapshot(collection(db, 'salesZones'), (s) => setSalesZones(s.docs.map(d => ({id: d.id, ...d.data()} as SalesZone)))),
+      onSnapshot(collection(db, 'sales'), (s) => setSales(s.docs.map(d => ({id: d.id, ...d.data()} as Sale)))), 
+      onSnapshot(collection(db, 'remitos'), (s) => setRemitos(s.docs.map(d => ({id: d.id, ...d.data()} as Remito)))),
+      onSnapshot(collection(db, 'boxes'), (s) => setBoxes(s.docs.map(d => ({id: d.id, ...d.data()} as Box)))),
+<<<<<<< HEAD
+      onSnapshot(collection(db, 'brands'), (s) => setBrands(s.docs.map(d => ({id: d.id, ...d.data()} as Brand)))),
+      onSnapshot(collection(db, 'categories'), (s) => setCategories(s.docs.map(d => ({id: d.id, ...d.data()} as Category)))),
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
     ];
     setLoading(false);
     return () => unsubscribers.forEach(u => u());
@@ -113,8 +150,8 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (options.startAfterDoc) q = query(q, startAfter(options.startAfterDoc));
     q = query(q, limit(options.limit));
     const s = await getDocs(q);
-    const fetched = s.docs.map(d => ({ id: d.id, ...d.data() } as Product));
-    return { products: fetched, lastVisible: s.docs[s.docs.length - 1], hasMore: s.docs.length === options.limit };
+    const fetched = s.docs.map(d => ({id: d.id, ...d.data()} as Product));
+    return { products: fetched, lastVisible: s.docs[s.docs.length-1], hasMore: s.docs.length === options.limit };
   }, []);
 
   const getProductById = async (id: string) => products.find(p => p.id === id) || null;
@@ -122,9 +159,8 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const updateProduct = async (id: string, p: any) => { await updateDoc(doc(db, 'products', id), p); };
   const deleteProduct = async (id: string) => { await deleteDoc(doc(db, 'products', id)); };
 
-  // Updated addSale to return the ID
-  const addSale = async (data: Omit<Sale, 'id'>): Promise<string> => {
-    const docRef = await addDoc(collection(db, 'sales'), data);
+  const addSale = async (data: Omit<Sale, 'id'>): Promise<string> => { 
+    const docRef = await addDoc(collection(db, 'sales'), data); 
     return docRef.id;
   };
   const getSaleById = async (id: string) => sales.find(s => s.id === id) || null;
@@ -154,7 +190,7 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const deleteInstallmentPlan = async (id: string) => { await deleteDoc(doc(db, 'installmentPlans', id)); };
 
   const addTransaction = async (t: any) => { await addDoc(collection(db, 'transactions'), t); };
-
+  
   const addUser = async (u: any) => { await addDoc(collection(db, 'users'), u); };
   const updateUser = async (id: string, u: any) => { await updateDoc(doc(db, 'users', id), u); };
   const deleteUser = async (id: string) => { await deleteDoc(doc(db, 'users', id)); };
@@ -163,7 +199,6 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const updateSalesZone = async (id: string, sz: any) => { await updateDoc(doc(db, 'salesZones', id), sz); };
   const deleteSalesZone = async (id: string) => { await deleteDoc(doc(db, 'salesZones', id)); };
 
-  // New Remito functions
   const addRemito = async (r: Omit<Remito, 'id'>): Promise<string> => {
     const docRef = await addDoc(collection(db, 'remitos'), r);
     return docRef.id;
@@ -172,13 +207,53 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const deleteRemito = async (id: string) => { await deleteDoc(doc(db, 'remitos', id)); };
   const getRemitoById = async (id: string) => remitos.find(r => r.id === id) || null;
 
+  const addBox = async (b: any) => { await addDoc(collection(db, 'boxes'), b); };
+  const updateBox = async (id: string, b: any) => { await updateDoc(doc(db, 'boxes', id), b); };
+  const deleteBox = async (id: string) => { await deleteDoc(doc(db, 'boxes', id)); };
+
+<<<<<<< HEAD
+  const addBrand = async (b: Omit<Brand, 'id'>) => { await addDoc(collection(db, 'brands'), b); };
+  const updateBrand = async (id: string, b: Partial<Brand>) => { await updateDoc(doc(db, 'brands', id), b); };
+  const deleteBrand = async (id: string) => { await deleteDoc(doc(db, 'brands', id)); };
+
+  const addCategory = async (c: Omit<Category, 'id'>) => { await addDoc(collection(db, 'categories'), c); };
+  const updateCategory = async (id: string, c: Partial<Category>) => { await updateDoc(doc(db, 'categories', id), c); };
+  const deleteCategory = async (id: string) => { await deleteDoc(doc(db, 'categories', id)); };
+
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
   const exportAllData = async (cols: string[]) => {
     const res: any = {};
     for (const c of cols) {
       const s = await getDocs(collection(db, c));
-      res[c] = s.docs.map(d => d.data());
+<<<<<<< HEAD
+=======
+      // Incluimos ID para que al restaurar se mantengan las relaciones
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
+      res[c] = s.docs.map(d => ({ id: d.id, ...d.data() }));
     }
     return res;
+  };
+
+  const importAllData = async (data: Record<string, any[]>) => {
+    for (const [collectionName, documents] of Object.entries(data)) {
+<<<<<<< HEAD
+      await deleteAllDocumentsInCollection(collectionName);
+=======
+      // Limpiamos la colección actual antes de restaurar
+      await deleteAllDocumentsInCollection(collectionName);
+      
+      // Restauramos documentos con sus IDs originales
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
+      for (const docObj of documents) {
+        const { id, ...dataWithoutId } = docObj;
+        if (id) {
+          await setDoc(doc(db, collectionName, id), dataWithoutId);
+        } else {
+          await addDoc(collection(db, collectionName), dataWithoutId);
+        }
+      }
+    }
   };
 
   const deleteAllDocumentsInCollection = async (name: string) => {
@@ -187,14 +262,24 @@ export const FirebaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   const value = useMemo(() => ({
-    products, clients, suppliers, transactions, priceLists, branches, orders, installmentPlans, users, loading, error, salesZones, sales, remitos,
+<<<<<<< HEAD
+    products, clients, suppliers, transactions, priceLists, branches, orders, installmentPlans, users, loading, error, salesZones, sales, remitos, boxes, brands, categories,
+=======
+    products, clients, suppliers, transactions, priceLists, branches, orders, installmentPlans, users, loading, error, salesZones, sales, remitos, boxes,
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
     fetchProductsPaginatedAndFiltered, getProductById, addProduct, updateProduct, deleteProduct,
     addSale, getSaleById, addClient, updateClient, deleteClient, addSupplier, updateSupplier, deleteSupplier,
     addPriceList, updatePriceList, deletePriceList, addBranch, updateBranch, deleteBranch,
     addOrder, updateOrder, deleteOrder, addInstallmentPlan, updateInstallmentPlan, deleteInstallmentPlan,
-    addTransaction, exportAllData, deleteAllDocumentsInCollection, addUser, updateUser, deleteUser, addSalesZone, updateSalesZone, deleteSalesZone,
-    addRemito, updateRemito, deleteRemito, getRemitoById
-  }), [products, clients, suppliers, transactions, priceLists, branches, orders, installmentPlans, users, loading, error, salesZones, sales, remitos]);
+    addTransaction, exportAllData, importAllData, deleteAllDocumentsInCollection, addUser, updateUser, deleteUser, addSalesZone, updateSalesZone, deleteSalesZone,
+    addRemito, updateRemito, deleteRemito, getRemitoById,
+<<<<<<< HEAD
+    addBox, updateBox, deleteBox, addBrand, updateBrand, deleteBrand, addCategory, updateCategory, deleteCategory
+  }), [products, clients, suppliers, transactions, priceLists, branches, orders, installmentPlans, users, loading, error, salesZones, sales, remitos, boxes, brands, categories]);
+=======
+    addBox, updateBox, deleteBox
+  }), [products, clients, suppliers, transactions, priceLists, branches, orders, installmentPlans, users, loading, error, salesZones, sales, remitos, boxes]);
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 
   return <FirebaseContext.Provider value={value}>{children}</FirebaseContext.Provider>;
 };

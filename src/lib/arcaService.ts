@@ -1,5 +1,5 @@
 
-import { Client, Supplier } from '../types';
+import { Client, Supplier, InternalUser } from '../types';
 
 // Mock ARCA_API_KEY for demonstration. In a real app, this would be secured.
 const ARCA_API_KEY = process.env.ARCA_API_KEY || "YOUR_ARCA_DEMO_KEY"; 
@@ -22,28 +22,33 @@ interface ArcaSupplierData {
 }
 
 /**
+ * Simulates submitting payroll data to ARCA (Libro de Sueldos Digital).
+ */
+export async function submitPayrollToArca(userData: InternalUser, amount: number) {
+  await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate processing
+
+  // Logical validation simulation
+  if (amount <= 0) throw new Error("El importe a liquidar debe ser mayor a cero.");
+
+  return {
+    status: 'success',
+    cuil: '20-' + userData.id + '-9',
+    protocolNumber: 'LSD-' + Math.floor(Math.random() * 1000000),
+    timestamp: new Date().toISOString(),
+    message: "Liquidación validada correctamente en Libro de Sueldos Digital."
+  };
+}
+
+/**
  * Simulates fetching data from an ARCA-like service based on CUIT.
- * In a real-world scenario, this would typically involve:
- * 1. An API call to your backend.
- * 2. Your backend communicating with AFIP/ARCA using secure credentials.
- * 3. Your backend returning the processed data to the frontend.
- * 
- * For this exercise, we simulate the API call directly.
- * @param cuit The CUIT to search for.
- * @param type 'client' or 'supplier' to determine the type of data to return.
- * @returns A Promise resolving with the ARCA data or rejecting with an error.
  */
 export async function fetchArcaDataByCuit(cuit: string, type: 'client' | 'supplier'): Promise<ArcaClientData | ArcaSupplierData> {
-  // Fix: Corrected setTimeout arguments to use resolve as the handler and the delay as the timeout.
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, Math.random() * 1500 + 500)); // 0.5 to 2 seconds
+  await new Promise(resolve => setTimeout(resolve, Math.random() * 1500 + 500)); 
 
-  // Fix: Updated condition to explicitly check for "DEMO_KEY"
   if (!ARCA_API_KEY || ARCA_API_KEY.includes("DEMO_KEY") || ARCA_API_KEY.includes("REPLACE-ME")) {
     console.warn("ARCA Service: Using a demo API key. Replace with a real one for production.");
   }
 
-  // Mock data based on CUIT and type
   const mockData: { [cuit: string]: { client?: ArcaClientData, supplier?: ArcaSupplierData } } = {
     '20-33445566-7': {
       client: {
@@ -81,11 +86,9 @@ export async function fetchArcaDataByCuit(cuit: string, type: 'client' | 'suppli
         address: 'Ruta 3 Km 50',
       }
     },
-    // Add more mock CUITs as needed
   };
 
   const data = mockData[cuit];
-
   if (data && data[type]) {
     return data[type]!;
   } else {

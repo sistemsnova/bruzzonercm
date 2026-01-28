@@ -1,19 +1,53 @@
+
+<<<<<<< HEAD
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body { 
   font-family: 'Inter', sans-serif; 
+  @apply bg-slate-50 text-slate-900 antialiased;
 }
 
-/* Tus estilos personalizados de scrollbar */
+.custom-scrollbar::-webkit-scrollbar { 
+  width: 6px; 
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track { 
+  background: transparent; 
+}
+
+=======
+body { 
+  font-family: 'Inter', sans-serif; 
+}
 .custom-scrollbar::-webkit-scrollbar { 
   width: 6px; 
 }
 .custom-scrollbar::-webkit-scrollbar-track { 
   background: transparent; 
 }
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 .custom-scrollbar::-webkit-scrollbar-thumb { 
   background: #cbd5e1; 
   border-radius: 10px; 
 }
+<<<<<<< HEAD
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { 
+  background: #94a3b8; 
+}
+
+/* Animaciones suaves para transiciones de pestañas */
+.tab-content-enter {
+  opacity: 0;
+  transform: scale(0.98);
+}
+.tab-content-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms, transform 300ms;
+}
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b

@@ -25,7 +25,12 @@ const INSTALLMENT_STATUS_COLORS: Record<InstallmentStatus, string> = {
 };
 
 const Installments: React.FC = () => {
+<<<<<<< HEAD
+  // Fix: added boxes to destructuring
+  const { clients, installmentPlans, addInstallmentPlan, updateInstallmentPlan, deleteInstallmentPlan, addTransaction, boxes } = useFirebase();
+=======
   const { clients, installmentPlans, addInstallmentPlan, updateInstallmentPlan, deleteInstallmentPlan, addTransaction } = useFirebase();
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 
   const [filterSearch, setFilterSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<InstallmentStatus | 'all'>('all');
@@ -78,13 +83,23 @@ const Installments: React.FC = () => {
     if (planFormData.clientId) {
       const client = clients.find(c => c.id === planFormData.clientId);
       if (client) {
+<<<<<<< HEAD
+        setOrderFormData(prev => ({ ...prev, clientName: client.name }));
+=======
         setPlanFormData(prev => ({ ...prev, clientName: client.name }));
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
       }
     } else {
       setPlanFormData(prev => ({ ...prev, clientName: '' }));
     }
   }, [planFormData.clientId, clients]);
 
+<<<<<<< HEAD
+  // Temporary function because setOrderFormData was likely a typo in the original file pointing to setPlanFormData
+  const setOrderFormData = setPlanFormData;
+
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
 
   const openPlanForm = (plan: InstallmentPlan | null) => {
     if (plan) {
@@ -133,7 +148,7 @@ const Installments: React.FC = () => {
         nextDueDate: planFormData.nextDueDate,
         description: planFormData.description!,
       };
-
+      
       if (activePlan) {
         await updateInstallmentPlan(activePlan.id, planToSave);
       } else {
@@ -181,19 +196,34 @@ const Installments: React.FC = () => {
     try {
       const newRemaining = activePlan.remainingAmount - paymentData.amountPaid;
       const newStatus: InstallmentStatus = newRemaining <= 0 ? 'pagado' : 'activo';
-
+      
+<<<<<<< HEAD
+      const pdId = `pd-${Date.now()}`;
+      
+=======
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
       // Fix: Added missing required paymentDetails property to the new payment object
       const newPayment: InstallmentPayment = {
         id: `pay-${Date.now()}`,
         date: new Date().toISOString(),
         amountPaid: paymentData.amountPaid,
         method: paymentData.method,
+<<<<<<< HEAD
+        // Enriched with a single PaymentDetail
+        paymentDetails: [{
+           id: pdId,
+           method: paymentData.method as any,
+           amount: paymentData.amountPaid,
+           netAmount: paymentData.amountPaid
+        }], 
+=======
         paymentDetails: [], // This could be enriched with actual payment method details if needed
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
         notes: paymentData.notes,
       };
 
       const updatedPayments = [...activePlan.payments, newPayment];
-
+      
       // Update client balance
       const client = clients.find(c => c.id === activePlan.clientId);
       if (client) {
@@ -201,10 +231,25 @@ const Installments: React.FC = () => {
       }
 
       // Add a transaction record
+<<<<<<< HEAD
+      // Fix: added missing required boxId and enriched paymentDetails
+      await addTransaction({
+        amount: paymentData.amountPaid,
+        type: 'ingreso',
+        boxId: boxes.find(b => b.status === 'abierta')?.id || boxes[0]?.id || 'mostrador',
+        category: 'venta',
+        paymentDetails: [{
+           id: pdId,
+           method: paymentData.method as any,
+           amount: paymentData.amountPaid,
+           netAmount: paymentData.amountPaid
+        }],
+=======
       await addTransaction({
         amount: paymentData.amountPaid,
         type: 'ingreso',
         paymentDetails: [],
+>>>>>>> bbad2f08247477f174e4da4b0cfbdb5500c5fb9b
         description: `Pago de cuota de plan ${activePlan.id} por ${activePlan.clientName}`,
         date: new Date().toISOString()
       });
@@ -315,8 +360,9 @@ const Installments: React.FC = () => {
                   <button
                     key={status}
                     onClick={() => setFilterStatus(status)}
-                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${filterStatus === status ? 'bg-purple-600 text-white shadow-md' : 'text-slate-50 hover:bg-slate-50'
-                      }`}
+                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
+                      filterStatus === status ? 'bg-purple-600 text-white shadow-md' : 'text-slate-50 hover:bg-slate-50'
+                    }`}
                   >
                     {status === 'all' ? 'Todos' : INSTALLMENT_STATUS_LABELS[status as InstallmentStatus]}
                   </button>
@@ -610,7 +656,7 @@ const Installments: React.FC = () => {
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Saldo Pendiente</span>
                 <span className="text-3xl font-black text-red-600">${activePlan.remainingAmount.toLocaleString()}</span>
               </div>
-
+              
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monto del Pago ($)</label>
                 <input

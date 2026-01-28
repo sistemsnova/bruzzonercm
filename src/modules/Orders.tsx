@@ -204,7 +204,7 @@ const Orders: React.FC = () => {
     setOrderItemsForm(prev => [
       ...prev,
       {
-        productId: `service-${Date.now()}`,
+        productId: `service-${Date.now()}`, 
         sku: 'SERVICIO',
         name: serviceItemData.name,
         brand: 'N/A',
@@ -236,7 +236,7 @@ const Orders: React.FC = () => {
         dateCreated: orderFormData.dateCreated || new Date().toISOString().split('T')[0],
         dateDue: orderFormData.dateDue,
         notes: orderFormData.notes,
-        isServiceOrder: orderItemsForm.some(item => item.isService),
+        isServiceOrder: orderItemsForm.some(item => item.isService), 
       };
 
       if (activeOrder) {
@@ -319,7 +319,7 @@ const Orders: React.FC = () => {
       const newRemitoId = await addRemito(remitoData);
 
       // Update the original Order's status
-      await updateOrder(selectedOrderForRemito.id, {
+      await updateOrder(selectedOrderForRemito.id, { 
         status: 'en_camino', // Or 'entregado', depending on flow
         // If order had a remitoIds array, you'd push newRemitoId here
       });
@@ -608,8 +608,9 @@ const Orders: React.FC = () => {
                   <button
                     key={status}
                     onClick={() => setFilterStatus(status)}
-                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${filterStatus === status ? 'bg-orange-600 text-white shadow-md' : 'text-slate-50 hover:bg-slate-50'
-                      }`}
+                    className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
+                      filterStatus === status ? 'bg-orange-600 text-white shadow-md' : 'text-slate-50 hover:bg-slate-50'
+                    }`}
                   >
                     {status === 'all' ? 'Todos' : ORDER_STATUS_LABELS[status as OrderStatus]}
                   </button>
@@ -757,7 +758,7 @@ const Orders: React.FC = () => {
                 <X className="w-6 h-6" />
               </button>
             </div>
-
+            
             <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <section className="space-y-6">
                 <div className="grid grid-cols-2 gap-6">
@@ -801,7 +802,7 @@ const Orders: React.FC = () => {
                       </button>
                     </div>
                   </div>
-
+                  
                   <div className="border border-slate-100 rounded-2xl overflow-hidden">
                     <table className="w-full">
                       <thead className="bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b">
@@ -824,9 +825,9 @@ const Orders: React.FC = () => {
                                 <p className="text-[10px] text-slate-400 uppercase">{item.sku}</p>
                               </td>
                               <td className="px-6 py-4 text-center">
-                                <input
-                                  type="number"
-                                  value={item.quantity}
+                                <input 
+                                  type="number" 
+                                  value={item.quantity} 
                                   onChange={e => handleOrderItemQuantityChange(idx, parseInt(e.target.value))}
                                   className="w-16 text-center border rounded-lg font-bold"
                                 />
@@ -863,7 +864,7 @@ const Orders: React.FC = () => {
               </div>
               <div className="flex gap-4">
                 <button onClick={() => setShowOrderModal(false)} className="px-8 py-4 bg-white border border-slate-200 rounded-2xl font-black text-slate-500 uppercase text-xs tracking-widest">Cancelar</button>
-                <button
+                <button 
                   onClick={handleSaveOrder}
                   disabled={isSavingOrder}
                   className="px-8 py-4 bg-orange-600 text-white rounded-2xl font-black shadow-xl shadow-orange-600/20 hover:bg-orange-500 transition-all flex items-center justify-center gap-2 uppercase text-xs tracking-widest"
