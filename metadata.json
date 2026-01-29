@@ -1,0 +1,7 @@
+{
+  "name": "sistema gestion ferreteria crm 2",
+  "description": "ERP para ferreterías sincronizado a tiempo real en todas las terminales mediante Firebase Firestore. Gestión total de inventario, cajas y facturación AFIP.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
