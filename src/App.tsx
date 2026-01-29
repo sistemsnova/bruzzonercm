@@ -1,5 +1,4 @@
-
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FirebaseProvider } from './context/FirebaseContext';
 import Sidebar from './components/Sidebar';
 import TabBar from './components/TabBar';
@@ -35,8 +34,16 @@ import { Remitos } from './modules/Remitos';
 import CustomerPortal from './modules/CustomerPortal';
 import CatalogConfig from './modules/CatalogConfig'; 
 import LoginScreen from './LoginScreen';
-import { Role, Client } from './types';
-import { Search, Sparkles } from 'lucide-react';
+import { Role } from './types';
+// Importación corregida de todos los iconos necesarios
+import { 
+  Search, Sparkles, LayoutDashboard, Package, ShoppingCart, 
+  ShoppingBag, Users, Truck, Wallet, BarChart3, 
+  Settings as SettingsIcon, MapPin, Tag, Upload, 
+  Warehouse as WarehouseIcon, FileText, Globe, Heart, 
+  Layers, FileSearch, ClipboardList, CreditCard, 
+  Scale, AlertTriangle, RefreshCcw, Edit3, UserCheck, Bookmark
+} from 'lucide-react';
 
 export interface PrintSettings {
   pageSize: 'A4' | 'A5' | 'A6' | '80mm' | '58mm';
@@ -76,44 +83,39 @@ const initialCompanyInfo: CompanyInfo = {
   arca: { enabled: true, puntoVenta: 5, iibb: '901-123456-7', crtValidUntil: '2025-12-31' },
   printConfigs: { factura: { ...DEFAULT_PRINT_CONFIG }, remito: { ...DEFAULT_PRINT_CONFIG }, recibo: { ...DEFAULT_PRINT_CONFIG }, etiqueta: { ...DEFAULT_PRINT_CONFIG, pageSize: '80mm' } },
   paymentCommissions: {
-    'efectivo': 0,
-    'tarjeta_debito': 1.5,
-    'tarjeta_credito': 3.5,
-    'transferencia': 0,
-    'cheque': 0,
-    'cuenta_corriente': 0,
-    'otro': 0
+    'efectivo': 0, 'tarjeta_debito': 1.5, 'tarjeta_credito': 3.5, 'transferencia': 0, 'cheque': 0, 'cuenta_corriente': 0, 'otro': 0
   }
 };
 
+// Iconos asignados correctamente para que no de error
 export const MODULE_METADATA: Record<string, { label: string; icon: any }> = {
-  'dashboard': { label: 'Dashboard', icon: Search }, // Temporary, replaced by LayoutDashboard in actual run
-  'inventory': { label: 'Inventario', icon: Search },
-  'sales': { label: 'Ventas', icon: Search },
-  'purchases': { label: 'Compras', icon: Search },
-  'clients': { label: 'Clientes', icon: Search },
-  'suppliers': { label: 'Proveedores', icon: Search },
-  'cashier': { label: 'Cajas', icon: Search },
-  'reports': { label: 'Informes', icon: Search },
-  'settings': { label: 'Configuración', icon: Search },
-  'branches': { label: 'Sucursales', icon: Search },
-  'prices': { label: 'Precios', icon: Search },
-  'bulk-import': { label: 'Importar', icon: Search },
-  'warehouse': { label: 'Depósito', icon: Search },
-  'purchase-orders': { label: 'Pedidos Compra', icon: Search },
-  'ecommerce': { label: 'E-Commerce', icon: Search },
-  'loyalty': { label: 'Fidelización', icon: Search },
-  'remitos': { label: 'Remitos', icon: Search },
-  'integrations': { label: 'Integraciones', icon: Search },
-  'quotes': { label: 'Cotizaciones', icon: Search },
-  'orders': { label: 'Pedidos', icon: Search },
-  'installments': { label: 'Cuotas', icon: Search },
-  'balances': { label: 'Saldos', icon: Search },
-  'missing-items': { label: 'Faltantes', icon: Search },
-  'stock-adjustment': { label: 'Ajuste Stock', icon: Search },
-  'bulk-modification': { label: 'Modif. Masiva', icon: Search },
-  'users': { label: 'Personal y Accesos', icon: Search },
-  'catalog-config': { label: 'Marcas & Rubros', icon: Search }, 
+  'dashboard': { label: 'Dashboard', icon: LayoutDashboard },
+  'inventory': { label: 'Inventario', icon: Package },
+  'sales': { label: 'Ventas', icon: ShoppingCart },
+  'purchases': { label: 'Compras', icon: ShoppingBag },
+  'clients': { label: 'Clientes', icon: Users },
+  'suppliers': { label: 'Proveedores', icon: Truck },
+  'cashier': { label: 'Cajas', icon: Wallet },
+  'reports': { label: 'Informes', icon: BarChart3 },
+  'settings': { label: 'Configuración', icon: SettingsIcon },
+  'branches': { label: 'Sucursales', icon: MapPin },
+  'prices': { label: 'Precios', icon: Tag },
+  'bulk-import': { label: 'Importar', icon: Upload },
+  'warehouse': { label: 'Depósito', icon: WarehouseIcon },
+  'purchase-orders': { label: 'Pedidos Compra', icon: FileText },
+  'ecommerce': { label: 'E-Commerce', icon: Globe },
+  'loyalty': { label: 'Fidelización', icon: Heart },
+  'remitos': { label: 'Remitos', icon: ClipboardList },
+  'integrations': { label: 'Integraciones', icon: Layers },
+  'quotes': { label: 'Cotizaciones', icon: FileSearch },
+  'orders': { label: 'Pedidos', icon: Bookmark },
+  'installments': { label: 'Cuotas', icon: CreditCard },
+  'balances': { label: 'Saldos', icon: Scale },
+  'missing-items': { label: 'Faltantes', icon: AlertTriangle },
+  'stock-adjustment': { label: 'Ajuste Stock', icon: RefreshCcw },
+  'bulk-modification': { label: 'Modif. Masiva', icon: Edit3 },
+  'users': { label: 'Personal y Accesos', icon: UserCheck },
+  'catalog-config': { label: 'Marcas & Rubros', icon: Tag }, 
 };
 
 const AppContent: React.FC = () => {
@@ -166,28 +168,15 @@ const AppContent: React.FC = () => {
 
   const handleAiAction = (action: string, target: string) => {
     switch (action) {
-      case 'NAVIGATE':
-        openTab(target);
-        break;
-      case 'SEARCH_PRODUCT':
-        openTab('inventory');
-        // Se podría pasar el target a Inventory vía context
-        break;
-      case 'CHECK_DEBT':
-        openTab('balances');
-        break;
-      default:
-        console.log('Action not handled:', action);
+      case 'NAVIGATE': openTab(target); break;
+      case 'SEARCH_PRODUCT': openTab('inventory'); break;
+      case 'CHECK_DEBT': openTab('balances'); break;
+      default: console.log('Action not handled:', action);
     }
   };
 
-  if (!isLoggedIn) {
-    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
-  }
-
-  if (currentUser.role === 'customer') {
-    return <CustomerPortal client={currentUser.data} onLogout={handleLogout} companyInfo={companyInfo} />;
-  }
+  if (!isLoggedIn) return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  if (currentUser.role === 'customer') return <CustomerPortal client={currentUser.data} onLogout={handleLogout} companyInfo={companyInfo} />;
 
   const renderModule = (id: string) => {
     switch (id) {
@@ -225,53 +214,25 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden relative">
-      <CommandPalette 
-        isOpen={isCommandPaletteOpen} 
-        onClose={() => setIsCommandPaletteOpen(false)} 
-        onAction={handleAiAction}
-      />
-
-      <Sidebar 
-        activeTab={activeTabId} 
-        setActiveTab={openTab} 
-        companyInfo={companyInfo}
-        currentUser={currentUser as any}
-        onLogout={handleLogout}
-      />
+      <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => setIsCommandPaletteOpen(false)} onAction={handleAiAction} />
+      <Sidebar activeTab={activeTabId} setActiveTab={openTab} companyInfo={companyInfo} currentUser={currentUser as any} onLogout={handleLogout} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-14 bg-white border-b border-slate-200 px-8 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-4">
-             <button 
-                onClick={() => setIsCommandPaletteOpen(true)}
-                className="flex items-center gap-3 px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition-all group"
-             >
-                <Search className="w-4 h-4 text-slate-400 group-hover:text-orange-500" />
-                <span className="text-xs font-bold text-slate-400">Comando Global Inteligente...</span>
-                <span className="text-[9px] font-black bg-white border px-1.5 py-0.5 rounded-md text-slate-300">CTRL+K</span>
-             </button>
-          </div>
-          <div className="flex items-center gap-4">
-             <div className="px-3 py-1 bg-blue-50 border border-blue-100 rounded-full flex items-center gap-2">
-                <Sparkles className="w-3 h-3 text-blue-600 animate-pulse" />
-                <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest">AI Engine Active</span>
-             </div>
+          <button onClick={() => setIsCommandPaletteOpen(true)} className="flex items-center gap-3 px-4 py-2 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200 transition-all group">
+            <Search className="w-4 h-4 text-slate-400 group-hover:text-orange-500" />
+            <span className="text-xs font-bold text-slate-400">Comando Global Inteligente...</span>
+            <span className="text-[9px] font-black bg-white border px-1.5 py-0.5 rounded-md text-slate-300">CTRL+K</span>
+          </button>
+          <div className="px-3 py-1 bg-blue-50 border border-blue-100 rounded-full flex items-center gap-2">
+            <Sparkles className="w-3 h-3 text-blue-600 animate-pulse" />
+            <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest">AI Engine Active</span>
           </div>
         </header>
-
-        <TabBar 
-          openTabs={openTabs} 
-          activeTabId={activeTabId} 
-          setActiveTabId={setActiveTabId} 
-          onCloseTab={closeTab} 
-        />
-        
+        <TabBar openTabs={openTabs} activeTabId={activeTabId} setActiveTabId={setActiveTabId} onCloseTab={closeTab} />
         <main className="flex-1 overflow-y-auto p-8 custom-scrollbar relative bg-slate-50/50">
           <div className="max-w-7xl mx-auto h-full">
             {openTabs.map(tabId => (
-              <div 
-                key={tabId} 
-                className={`h-full transition-all duration-300 ${tabId === activeTabId ? 'block animate-in fade-in zoom-in-95' : 'hidden'}`}
-              >
+              <div key={tabId} className={`h-full ${tabId === activeTabId ? 'block animate-in fade-in zoom-in-95' : 'hidden'}`}>
                 {renderModule(tabId)}
               </div>
             ))}
@@ -282,12 +243,10 @@ const AppContent: React.FC = () => {
   );
 };
 
-const App: React.FC = () => {
-  return (
-    <FirebaseProvider>
-      <AppContent />
-    </FirebaseProvider>
-  );
-};
+const App: React.FC = () => (
+  <FirebaseProvider>
+    <AppContent />
+  </FirebaseProvider>
+);
 
 export default App;
