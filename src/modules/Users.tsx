@@ -124,8 +124,7 @@ const UsersModule: React.FC = () => {
         boxId: boxId,
         category: 'sueldo',
         description: `Liquidación Haberes: ${user.name} (Libro Sueldos Digital)`,
-        // Fix: added missing netAmount property required by PaymentDetail
-        paymentDetails: [{ id: `pay-${Date.now()}`, method: 'efectivo', amount: net, netAmount: net }]
+        paymentDetails: [{ id: `pay-${Date.now()}`, method: 'efectivo', amount: net, netAmount: net, targetBoxId: boxId }]
       });
 
       await updateBox(boxId, { balance: selectedBox.balance - net });
@@ -158,8 +157,7 @@ const UsersModule: React.FC = () => {
           boxId: quickAdvance.boxId,
           category: 'sueldo',
           description: `Vale/Adelanto: ${showQuickAdvanceModal.name}`,
-          // Fix: added missing netAmount property required by PaymentDetail
-          paymentDetails: [{ id: `pm-${Date.now()}`, method: 'efectivo', amount: quickAdvance.amount, netAmount: quickAdvance.amount }]
+          paymentDetails: [{ id: `pm-${Date.now()}`, method: 'efectivo', amount: quickAdvance.amount, netAmount: quickAdvance.amount, targetBoxId: quickAdvance.boxId }]
         });
         await updateBox(quickAdvance.boxId, { balance: selectedBox.balance - quickAdvance.amount });
       }
@@ -192,7 +190,7 @@ const UsersModule: React.FC = () => {
       setUserFormData(user);
     } else {
       setUserFormData({ 
-        name: '', email: '', password: '', role: 'vendedor', status: 'Activo', 
+        name: '', email: '', password: '', role: 'Vendedor', status: 'Activo', 
         branchName: availableBranches[0]?.name || 'Central', 
         modules: ['sales'], salary: 0, advances: [],
         joiningDate: new Date().toISOString().split('T')[0]

@@ -95,8 +95,7 @@ const localMockSales: Sale[] = [
       { id: 'p4', sku: 'SINT-20L', name: 'Sinteplast Pintura Interior 20L', quantity: 1, price: 25000, brand: 'Sinteplast', subtotal: 25000, selectedSaleUnit: 'litro' },
     ],
     total: 25000,
-    // Fix: Added missing mandatory netAmount property
-    paymentDetails: [{ id: 'pd1', method: 'efectivo', amount: 25000, netAmount: 25000 }],
+    paymentDetails: [{ id: 'pd1', method: 'efectivo', amount: 25000, netAmount: 25000, targetBoxId: 'box-1' }],
     docType: 'factura_a',
     date: '2024-05-22T10:00:00Z',
     status: 'completado',
@@ -114,8 +113,7 @@ const localMockSales: Sale[] = [
       { id: 'p7', sku: 'ADHE-001', name: 'Adhesivo Epoxi', quantity: 1, price: 3500, brand: 'Poxipol', subtotal: 3500, selectedSaleUnit: 'unidad' }
     ],
     total: 16500,
-    // Fix: Added missing mandatory netAmount property
-    paymentDetails: [{ id: 'pd2', method: 'transferencia', amount: 16500, netAmount: 16500 }],
+    paymentDetails: [{ id: 'pd2', method: 'transferencia', amount: 16500, netAmount: 16500, targetBoxId: 'box-2' }],
     docType: 'factura_b',
     date: '2024-05-25T11:30:00Z',
     status: 'completado',
@@ -139,9 +137,8 @@ export const Remitos: React.FC = () => {
   
   // Soporte para pagos mixtos en la facturación de remitos
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetail[]>([]);
-  // Fix: Added missing mandatory netAmount property to initial state
-  const [newPaymentDetail, setNewPaymentDetail] = useState<Omit<PaymentDetail, 'id'>>({
-    method: 'efectivo', amount: 0, notes: '', netAmount: 0
+  const [newPaymentDetail, setNewPaymentDetail] = useState<Omit<PaymentDetail, 'id' | 'netAmount'>>({
+    method: 'efectivo', amount: 0, notes: '', targetBoxId: ''
   });
 
   // NEW: State for selected document type in billing modal
@@ -221,14 +218,14 @@ export const Remitos: React.FC = () => {
       alert("Por favor, ingresa un monto mayor a cero.");
       return;
     }
-    // Fix: Added mandatory netAmount property to PaymentDetail object
     const paymentWithNet: PaymentDetail = { 
       ...newPaymentDetail, 
       id: Date.now().toString(),
-      netAmount: newPaymentDetail.amount 
+      netAmount: newPaymentDetail.amount,
+      targetBoxId: newPaymentDetail.targetBoxId || ''
     };
     setPaymentDetails(prev => [...prev, paymentWithNet]);
-    setNewPaymentDetail({ method: 'efectivo', amount: 0, notes: '', netAmount: 0 }); 
+    setNewPaymentDetail({ method: 'efectivo', amount: 0, notes: '', targetBoxId: '' }); 
   };
 
   const openBillingModal = (remito: Remito | null = null, isBulk: boolean = false) => {
@@ -258,7 +255,7 @@ export const Remitos: React.FC = () => {
 
     setActiveRemito(remito); // Will be null if it's a bulk operation
     setPaymentDetails([]); // Clear previous payment details
-    setNewPaymentDetail({ method: 'efectivo', amount: 0, notes: '', netAmount: 0 });
+    setNewPaymentDetail({ method: 'efectivo', amount: 0, notes: '', targetBoxId: '' });
     setBillingDocType('factura_a'); // Default doc type for billing
     setExtraAmount(0); // Reset extra amounts
     setExtraDescription(''); // Reset extra description
@@ -581,7 +578,6 @@ export const Remitos: React.FC = () => {
                 <tr key={r.id} className={`hover:bg-slate-50 transition-colors group ${selectedIds.includes(r.id) ? 'bg-orange-50/50' : ''}`}>
                   <td className="px-6 py-4 text-center" onClick={() => r.status !== 'facturado' && toggleSelection(r.id)}>
                     {r.status === 'facturado' ? (
-                      /* Fix: Wrapped CheckSquare in span and moved 'title' attribute to span as Lucide components don't support it directly */
                       <span title="Remito ya facturado">
                         <CheckSquare className="w-5 h-5 text-blue-600 opacity-50" aria-hidden="true" />
                       </span>
@@ -599,7 +595,6 @@ export const Remitos: React.FC = () => {
                     {r.invoiceId && (
                       <div className="flex items-center gap-1 mt-1">
                         <FileCheck className="w-3 h-3 text-blue-600" aria-hidden="true" />
-                        {/* Fix: Moved Lucide icon into the button and applied title to the button */}
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleViewInvoiceDetails(r.invoiceId!); }}
                           className="text-[9px] font-black uppercase text-blue-600 hover:underline"
@@ -612,7 +607,6 @@ export const Remitos: React.FC = () => {
                   <td className="px-6 py-4 text-right font-black text-slate-900">${r.total.toLocaleString()}</td>
                   <td className="px-6 py-4 text-center">
                     {r.status === 'facturado' ? (
-                      // Fix: Moved Lucide icon into the button and applied title to the button
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleViewInvoiceDetails(r.invoiceId!); }}
                         className="p-2 text-blue-600 hover:text-blue-700" 

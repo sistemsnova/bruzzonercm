@@ -1,115 +1,111 @@
+
 import React, { useState } from 'react';
 import { 
-  Search, Scale, ArrowUpRight, ArrowDownRight, 
-  User, Truck, Filter, Download, History
+  Users, Truck, Search, Phone, Mail, 
+  MessageSquare, ChevronRight, TrendingDown, 
+  TrendingUp, ArrowRight, Download, Calendar,
+  AlertCircle, CheckCircle2, DollarSign, ExternalLink,
+  Receipt, FileText, ArrowLeft, Printer, Share2,
+  Plus, CreditCard, Wallet, Landmark, X, Save,
+  History, Eye
 } from 'lucide-react';
 import { useFirebase } from '../context/FirebaseContext';
+import { Client, Supplier, Transaction } from '../types';
+
+type DocumentType = 'RECIBO' | 'ORDEN_PAGO';
 
 export const Balances: React.FC = () => {
-  const { clients, suppliers } = useFirebase();
+  const { clients, suppliers, addTransaction, updateClient } = useFirebase();
   const [activeTab, setActiveTab] = useState<'clients' | 'suppliers'>('clients');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [search, setSearch] = useState('');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [showDocModal, setShowDocModal] = useState<{ show: boolean, type: DocumentType | null }>({ show: false, type: null });
 
-  const data = activeTab === 'clients' ? clients : suppliers;
-  const filteredData = data.filter(item => 
-    item?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item?.cuit?.includes(searchTerm)
+  const mockComprobantes = [
+    { id: 'FC-0001-4829', date: '2024-05-15', type: 'Factura A', amount: -45000, status: 'Pendiente' },
+    { id: 'RE-0001-1203', date: '2024-05-10', type: 'Recibo', amount: 15000, status: 'Applied' },
+    { id: 'FC-0001-4700', date: '2024-05-05', type: 'Factura B', amount: -15200, status: 'Vencido' },
+    { id: 'NC-0001-0052', date: '2024-05-01', type: 'Nota de Crédito', amount: 2500, status: 'Applied' },
+  ];
+
+  const sendWhatsApp = (client: Client) => {
+    const message = encodeURIComponent(`Hola ${client.name}, te contactamos de FerroGest por tu cuenta corriente. Tu saldo deudor es de $${Math.abs(client.balance).toLocaleString()}. Por favor contáctanos para coordinar el pago. Gracias.`);
+    window.open(`https://wa.me/${client.whatsapp}?text=${message}`, '_blank');
+  };
+
+  const filteredClients = clients.filter(c => 
+    (c.name.toLowerCase().includes(search.toLowerCase()) || c.cuit.includes(search)) &&
+    (activeTab === 'clients' ? c.balance < 0 : true)
   );
 
-  const totalBalance = filteredData.reduce((acc, item) => acc + (item?.balance || 0), 0);
+  const filteredSuppliers = suppliers.filter(s => 
+    s.name.toLowerCase().includes(search.toLowerCase()) || s.cuit.includes(search)
+  );
 
-  return (
-    <div className="space-y-6">
-      <header className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight">Cuentas Corrientes</h1>
-          <p className="text-slate-500 text-sm font-medium">Saldos pendientes de cobro y pago.</p>
-        </div>
-        <div className="flex bg-white border p-1 rounded-xl shadow-sm">
-          <button onClick={() => { setActiveTab('clients'); setSelectedItem(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase transition-all ${activeTab === 'clients' ? 'bg-orange-600 text-white' : 'text-slate-400'}`}>
-            <User className="w-4 h-4" /> Clientes
-          </button>
-          <button onClick={() => { setActiveTab('suppliers'); setSelectedItem(null); }} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-black uppercase transition-all ${activeTab === 'suppliers' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>
-            <Truck className="w-4 h-4" /> Proveedores
-          </button>
-        </div>
-      </header>
+  const totalClientDebt = clients.filter(c => c.balance < 0).reduce((acc, c) => acc + Math.abs(c.balance), 0);
+  const totalSupplierDebt = suppliers.reduce((acc, s) => acc + Math.abs(s.balance), 0);
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por nombre o CUIT..." 
-                className="w-full pl-10 pr-4 py-3 bg-slate-50 border-none rounded-xl text-sm outline-none focus:ring-2 focus:ring-slate-200 transition-all"
-              />
+  const handleOpenRecibo = (comp: any) => {
+    alert(`Visualizando Comprobante: ${comp.id}`);
+  };
+
+  const closeModals = () => {
+    setSelectedClient(null);
+    setSelectedSupplier(null);
+  };
+
+  // UI para Formulario de Recibo / Orden de Pago
+  const renderDocumentForm = () => {
+    const isRecibo = showDocModal.type === 'RECIBO';
+    const target = isRecibo ? selectedClient : selectedSupplier;
+    if (!target) return null;
+
+    return (
+      <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[110] flex items-center justify-center p-4">
+        <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+          <div className={`p-8 border-b flex justify-between items-center text-white ${isRecibo ? 'bg-orange-600' : 'bg-slate-900'}`}>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                <Receipt className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-black uppercase tracking-tight">{isRecibo ? 'Nuevo Recibo de Cobro' : 'Nueva Orden de Pago'}</h2>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-80">{target.name} • {target.cuit}</p>
+              </div>
             </div>
-            
-            <div className="space-y-2 max-h-[500px] overflow-y-auto custom-scrollbar">
-              {filteredData.map((item) => (
-                <button 
-                  key={item.id}
-                  onClick={() => setSelectedItem(item)}
-                  className={`w-full p-4 rounded-2xl border transition-all flex items-center justify-between group ${selectedItem?.id === item.id ? 'bg-slate-900 border-slate-900 text-white' : 'bg-white border-slate-100 hover:border-slate-300'}`}
-                >
-                  <div className="text-left">
-                    <p className={`font-bold text-sm ${selectedItem?.id === item.id ? 'text-white' : 'text-slate-800'}`}>{item?.name || 'Sin nombre'}</p>
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${selectedItem?.id === item.id ? 'text-slate-400' : 'text-slate-400'}`}>{item?.cuit}</p>
-                  </div>
-                  <p className={`font-black ${item?.balance > 0 ? 'text-orange-500' : 'text-green-500'}`}>
-                    ${Math.abs(item?.balance || 0).toLocaleString()}
-                  </p>
-                </button>
-              ))}
-            </div>
+            <button onClick={() => setShowDocModal({ show: false, type: null })} className="p-2 hover:bg-white/10 rounded-xl transition-all">
+              <X className="w-6 h-6" />
+            </button>
           </div>
-        </div>
 
-        <div className="lg:col-span-8">
-          {selectedItem ? (
-            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-4">
-              <div className={`p-10 flex justify-between items-center text-white ${activeTab === 'clients' ? 'bg-orange-600' : 'bg-blue-600'}`}>
-                <div className="flex items-center gap-6">
-                  {/* CORRECCIÓN LÍNEA 148 */}
-                  <div className="w-20 h-20 rounded-[1.5rem] bg-white/20 backdrop-blur-md flex items-center justify-center text-3xl font-black">
-                    {selectedItem?.name?.charAt(0) || '?'}
-                  </div>
-                  {/* CORRECCIÓN LÍNEA 149 */}
-                  <div>
-                    <h2 className="text-3xl font-black tracking-tight">{selectedItem?.name || 'Sin nombre'}</h2>
-                    <p className="text-white/60 font-bold uppercase tracking-[0.2em] text-xs">{selectedItem?.cuit || 'Sin CUIT'}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">Saldo Pendiente</p>
-                  {/* CORRECCIÓN LÍNEA 153 */}
-                  <h3 className="text-5xl font-black">${Math.abs(selectedItem?.balance || 0).toLocaleString()}</h3>
-                </div>
+          <div className="p-10 space-y-8">
+            <div className="grid grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Importe del Pago ($)</label>
+                <input 
+                  type="number" 
+                  placeholder="0.00"
+                  className={`w-full px-6 py-5 border-2 rounded-2xl focus:ring-2 outline-none font-black text-3xl text-center shadow-inner ${isRecibo ? 'border-orange-100 focus:ring-orange-500 text-orange-600' : 'border-slate-100 focus:ring-slate-500 text-slate-800'}`}
+                />
               </div>
-              
-              <div className="p-10 space-y-8">
-                <div className="flex gap-4">
-                  <button className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2">
-                    <History className="w-4 h-4" /> Ver Historial
-                  </button>
-                  <button className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2">
-                    <Download className="w-4 h-4" /> Descargar Resumen
-                  </button>
-                </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha del Movimiento</label>
+                <input 
+                  type="date" 
+                  defaultValue={new Date().toISOString().split('T')[0]}
+                  className="w-full px-5 py-5 border border-slate-200 rounded-2xl font-bold bg-slate-50 outline-none"
+                />
               </div>
             </div>
-          ) : (
-            <div className="h-full min-h-[400px] bg-slate-50 border-2 border-dashed border-slate-200 rounded-[3rem] flex flex-col items-center justify-center text-slate-400">
-              <Scale className="w-16 h-16 mb-4 opacity-20" />
-              <p className="font-black uppercase text-xs tracking-[0.2em]">Selecciona un {activeTab === 'clients' ? 'cliente' : 'proveedor'} para ver su saldo</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Forma de {isRecibo ? 'Cobro' : 'Pago'}</label>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { id: 'cash', label: 'Efectivo', icon: Wallet },
+                  { id: 'transfer', label: 'Transferencia', icon: Landmark },
+                  { id: 'check', label: 'Cheque', icon: FileText },
+                ].map(method => (
+                  <button key={method.id} className="p-4 border border-slate-200 rounded-2xl flex flex-col items-center gap-2 hover:border-orange-500 hover:bg-orange-50 transition-all group">
+                    <method.icon

@@ -24,8 +24,7 @@ const INSTALLMENT_STATUS_COLORS: Record<InstallmentStatus, string> = {
   'cancelado': 'bg-slate-50 text-slate-500 border-slate-100',
 };
 
-const Installments: React.FC = () => {
-  // Fix: added boxes to destructuring
+export const Installments: React.FC = () => {
   const { clients, installmentPlans, addInstallmentPlan, updateInstallmentPlan, deleteInstallmentPlan, addTransaction, boxes } = useFirebase();
 
   const [filterSearch, setFilterSearch] = useState('');
@@ -47,7 +46,6 @@ const Installments: React.FC = () => {
     nextDueDate: '',
     description: '',
   });
-  // Fix: Renamed isSavingOrder to isSavingPlan to match component context
   const [isSavingPlan, setIsSavingPlan] = useState(false);
 
   // States for registering new payment
@@ -79,15 +77,12 @@ const Installments: React.FC = () => {
     if (planFormData.clientId) {
       const client = clients.find(c => c.id === planFormData.clientId);
       if (client) {
-        setOrderFormData(prev => ({ ...prev, clientName: client.name }));
+        setPlanFormData(prev => ({ ...prev, clientName: client.name }));
       }
     } else {
       setPlanFormData(prev => ({ ...prev, clientName: '' }));
     }
   }, [planFormData.clientId, clients]);
-
-  // Temporary function because setOrderFormData was likely a typo in the original file pointing to setPlanFormData
-  const setOrderFormData = setPlanFormData;
 
 
   const openPlanForm = (plan: InstallmentPlan | null) => {
@@ -119,10 +114,9 @@ const Installments: React.FC = () => {
       alert('Por favor, selecciona un cliente, añade una descripción y un monto total.');
       return;
     }
-    // Fix: Used setIsSavingPlan instead of setIsSavingOrder
     setIsSavingPlan(true);
     try {
-      // Fix: Ensured all required properties of InstallmentPlan are present and typed correctly
+      // Ensured all required properties of InstallmentPlan are present and typed correctly
       const planToSave: Omit<InstallmentPlan, 'id'> = {
         clientId: planFormData.clientId!,
         clientName: planFormData.clientName || 'Cliente',
@@ -149,7 +143,6 @@ const Installments: React.FC = () => {
       console.error('Error al guardar el plan de cuotas:', error);
       alert('Ocurrió un error al guardar el plan de cuotas.');
     } finally {
-      // Fix: Used setIsSavingPlan instead of setIsSavingOrder
       setIsSavingPlan(false);
     }
   };
@@ -188,18 +181,18 @@ const Installments: React.FC = () => {
       
       const pdId = `pd-${Date.now()}`;
       
-      // Fix: Added missing required paymentDetails property to the new payment object
+      // Added missing required boxId and enriched paymentDetails
       const newPayment: InstallmentPayment = {
         id: `pay-${Date.now()}`,
         date: new Date().toISOString(),
         amountPaid: paymentData.amountPaid,
         method: paymentData.method,
-        // Enriched with a single PaymentDetail
         paymentDetails: [{
            id: pdId,
            method: paymentData.method as any,
            amount: paymentData.amountPaid,
-           netAmount: paymentData.amountPaid
+           netAmount: paymentData.amountPaid,
+           targetBoxId: boxes.find(b => b.status === 'abierta')?.id || boxes[0]?.id || 'mostrador' // Use a default or select box
         }], 
         notes: paymentData.notes,
       };
@@ -213,17 +206,17 @@ const Installments: React.FC = () => {
       }
 
       // Add a transaction record
-      // Fix: added missing required boxId and enriched paymentDetails
       await addTransaction({
         amount: paymentData.amountPaid,
         type: 'ingreso',
-        boxId: boxes.find(b => b.status === 'abierta')?.id || boxes[0]?.id || 'mostrador',
+        boxId: boxes.find(b => b.status === 'abierta')?.id || boxes[0]?.id || 'mostrador', // Use a default or select box
         category: 'venta',
         paymentDetails: [{
            id: pdId,
            method: paymentData.method as any,
            amount: paymentData.amountPaid,
-           netAmount: paymentData.amountPaid
+           netAmount: paymentData.amountPaid,
+           targetBoxId: boxes.find(b => b.status === 'abierta')?.id || boxes[0]?.id || 'mostrador'
         }],
         description: `Pago de cuota de plan ${activePlan.id} por ${activePlan.clientName}`,
         date: new Date().toISOString()
@@ -336,7 +329,7 @@ const Installments: React.FC = () => {
                     key={status}
                     onClick={() => setFilterStatus(status)}
                     className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
-                      filterStatus === status ? 'bg-purple-600 text-white shadow-md' : 'text-slate-50 hover:bg-slate-50'
+                      filterStatus === status ? 'bg-purple-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'
                     }`}
                   >
                     {status === 'all' ? 'Todos' : INSTALLMENT_STATUS_LABELS[status as InstallmentStatus]}
@@ -691,5 +684,4 @@ const Installments: React.FC = () => {
     </div>
   );
 };
-
-export default Installments;
+    

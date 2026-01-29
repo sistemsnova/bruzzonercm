@@ -1,3 +1,4 @@
+
 export type Role = 'admin' | 'vendedor' | 'contador' | 'deposito';
 
 export interface PriceList {
@@ -13,7 +14,7 @@ export interface Box {
   id: string;
   name: string;
   balance: number;
-  type: 'efectivo' | 'banco' | 'virtual' | 'cheques';
+  type: 'efectivo' | 'banco' | 'virtual' | 'cheques' | 'caja_a_depositar';
   status: 'abierta' | 'cerrada';
   lastClosed?: string;
   responsible?: string;
@@ -39,7 +40,6 @@ export interface Client {
   address?: string;
   alias?: string;
   documentType?: 'CUIT' | 'DNI' | 'LE' | 'LC' | 'PAS' | 'otro';
-  secondaryId?: string;
   ivaCondition?: string;
 }
 
@@ -119,7 +119,7 @@ export interface PaymentDetail {
   bank?: string;
   checkNumber?: string;
   dueDate?: string;
-  targetBoxId?: string;
+  targetBoxId: string; // Made mandatory
 }
 
 export interface Transaction {
@@ -196,10 +196,10 @@ export interface EmployeeAdvance {
 }
 
 export interface InternalUser {
-  id: string;
+  id: string | number;
   name: string;
   email: string;
-  role: Role;
+  role: string;
   status: string;
   branchName: string;
   modules: string[];
@@ -217,11 +217,33 @@ export interface SalesZone {
   assignedBranchIds?: string[];
 }
 
+export interface AndreaniConfig {
+  enabled: boolean;
+  clientId: string;
+  clientSecret: string;
+  accountNumber: string;
+  branchCode: string;
+  connected: boolean;
+  nickname?: string;
+}
+
+export interface SupplierAutomationConfig {
+  supplierId: string;
+  sourceType: 'manual' | 'web' | 'email';
+  url?: string;
+  emailSource?: string;
+  enabled: boolean;
+  lastRun?: string;
+  lastRunStatus?: 'success' | 'error';
+  lastRunMessage?: string;
+}
+
 export interface ExtractedQuoteItem {
   productName: string;
   quantity: number;
 }
 
+// Added QuoteItem interface to fix import error in modules/Quotes.tsx
 export interface QuoteItem {
   productId: string;
   sku: string;
@@ -232,17 +254,6 @@ export interface QuoteItem {
   subtotal: number;
   originalProduct: Product | null;
   unmatchedText?: string;
-}
-
-export interface Quote {
-  id: string;
-  clientId: string;
-  clientName: string;
-  date: string;
-  items: QuoteItem[];
-  total: number;
-  status: 'borrador' | 'enviado' | 'aceptado' | 'vencido';
-  notes?: string;
 }
 
 export interface RemitoItem {
@@ -306,25 +317,4 @@ export interface Category {
   id: string;
   name: string;
   description?: string;
-}
-
-export interface AndreaniConfig {
-  enabled: boolean;
-  clientId: string;
-  clientSecret: string;
-  accountNumber: string;
-  branchCode: string;
-  connected: boolean;
-  nickname?: string;
-}
-
-export interface SupplierAutomationConfig {
-  supplierId: string;
-  sourceType: 'manual' | 'web' | 'email';
-  url?: string;
-  emailSource?: string;
-  enabled: boolean;
-  lastRun?: string;
-  lastRunStatus?: 'success' | 'error';
-  lastRunMessage?: string;
 }

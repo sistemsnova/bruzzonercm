@@ -28,7 +28,7 @@ const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
 
 const ITEMS_PER_PAGE_PICKER = 10;
 
-const Orders: React.FC = () => {
+export const Orders: React.FC = () => {
   const { clients, orders, addOrder, updateOrder, deleteOrder, fetchProductsPaginatedAndFiltered, addRemito } = useFirebase();
 
   const [filterSearch, setFilterSearch] = useState('');
@@ -304,7 +304,7 @@ const Orders: React.FC = () => {
         originalSaleUnitConversionFactor: orderItem.originalProduct?.saleUnitConversionFactor || 1,
       }));
 
-      // Fix: Explicitly type `remitoData` to `Omit<Remito, 'id'>` to enforce correct `status` type
+      // Explicitly type `remitoData` to `Omit<Remito, 'id'>` to enforce correct `status` type
       const remitoData: Omit<Remito, 'id'> = {
         date: new Date().toISOString().split('T')[0],
         client: selectedOrderForRemito.clientName,
@@ -312,7 +312,7 @@ const Orders: React.FC = () => {
         itemsCount: remitoItemsList.length,
         itemsList: remitoItemsList,
         total: selectedOrderForRemito.total,
-        status: 'pendiente', // This is a valid literal for Remito['status']
+        status: 'pendiente', 
         // You might want to link remitoId to the order here too, if Order type had a remitoIds field
       };
 
@@ -609,7 +609,7 @@ const Orders: React.FC = () => {
                     key={status}
                     onClick={() => setFilterStatus(status)}
                     className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
-                      filterStatus === status ? 'bg-orange-600 text-white shadow-md' : 'text-slate-50 hover:bg-slate-50'
+                      filterStatus === status ? 'bg-orange-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'
                     }`}
                   >
                     {status === 'all' ? 'Todos' : ORDER_STATUS_LABELS[status as OrderStatus]}
@@ -882,5 +882,4 @@ const Orders: React.FC = () => {
     </div>
   );
 };
-
-export default Orders;
+    

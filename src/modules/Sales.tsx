@@ -10,16 +10,15 @@ import {
   Banknote, CalendarDays, Building,
   DollarSign, User, UserPlus,
   Users as UsersIcon, Percent, ArrowDownCircle,
-  // Fix: Added missing Info icon import
   Info
 } from 'lucide-react';
 import { useFirebase } from '../context/FirebaseContext';
-import { Product, Client, PaymentDetail, SaleItem, Sale, Box } from '../types';
+import { Product, Client, PaymentDetail, SaleItem, Sale, Box, RemitoItem, Order, Remito } from '../types'; // Import Order and Remito type
 import { CompanyInfo } from '../App';
 
 interface CartItem { 
   id: string; 
-  sku: string;
+  sku: string; 
   name: string;
   brand: string;
   price: number; 
@@ -39,7 +38,7 @@ interface SalesProps {
 
 export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
   const { 
-    addSale, addOrder, fetchProductsPaginatedAndFiltered, clients, updateProduct, boxes, addTransaction, updateBox 
+    addSale, addOrder, fetchProductsPaginatedAndFiltered, clients, updateProduct, boxes, addTransaction, updateBox, addRemito 
   } = useFirebase();
 
   const [search, setSearch] = useState('');
@@ -53,7 +52,7 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
   const [clientSearch, setClientSearch] = useState('');
   const [showClientResults, setShowClientResults] = useState(false);
 
-  const [docType, setDocType] = useState<SaleDocType>('ticket');
+  const [docType, setDocType] = useState<SaleDocType>('ticket'); // Default document type for sale
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetail[]>([]);
   const [newPaymentDetail, setNewPaymentDetail] = useState<Omit<PaymentDetail, 'id' | 'netAmount'>>({
     method: 'efectivo', 
@@ -62,7 +61,7 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
     bank: '', 
     checkNumber: '', 
     dueDate: '',
-    targetBoxId: ''
+    targetBoxId: '' // This will be mandatory
   });
   
   const [searchableProducts, setSearchableProducts] = useState<Product[]>([]);
@@ -156,10 +155,17 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
   }, [clients, clientSearch]);
 
   const handleAddPayment = () => {
-    if (newPaymentDetail.amount <= 0) return;
+    if (newPaymentDetail.amount <= 0) {
+      alert("Por favor ingrese un monto mayor a cero.");
+      return;
+    }
     if (!newPaymentDetail.targetBoxId) {
       alert("Por favor seleccione una caja de destino para este pago.");
       return;
+    }
+    if (['cheque', 'echeq'].includes(newPaymentDetail.method) && (!newPaymentDetail.bank || !newPaymentDetail.checkNumber || !newPaymentDetail.dueDate)) {
+        alert("Para pagos con cheque/echeq, complete todos los campos de cheque.");
+        return;
     }
 
     const commissionRate = companyInfo.paymentCommissions[newPaymentDetail.method] || 0;
@@ -177,23 +183,99 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
   };
 
   const handleFinishSale = async () => {
-    if (docType !== 'presupuesto' && Math.abs(remainingToPay) > 0.01) {
+    if (docType !== 'presupuesto' && Math.abs(remainingToPay) > 0.01 && docType !== 'remito') { // Remitos can have deferred payment
       alert(`Falta cubrir $${remainingToPay.toLocaleString()} del total.`);
       return;
     }
 
     setIsProcessing(true);
     try {
-      const saleItems: SaleItem[] = cart.map(item => ({
-        id: item.id, sku: item.sku, name: item.name, brand: item.brand,
-        price: item.price, quantity: item.quantity,
+      // Common items mapping for all document types
+      const mappedItems = cart.map(item => ({
+        productId: item.id,
+        sku: item.sku,
+        name: item.name,
+        brand: item.brand,
+        quantity: item.quantity,
+        unitPrice: item.price,
         subtotal: parseFloat((item.price * item.quantity).toFixed(2)),
-        isManual: item.isManual, selectedSaleUnit: item.selectedSaleUnit,
+        isManual: item.isManual,
+        selectedSaleUnit: item.selectedSaleUnit,
+        // For RemitoItem specific fields, we need the original Product
+        originalPrimaryUnit: item.primaryUnit,
+        originalSaleUnit: item.selectedSaleUnit,
+        originalSaleUnitConversionFactor: item.saleUnitConversionFactor,
+        // For OrderItem specific fields
+        originalProduct: null, // This would be fetched for Order if needed. Keeping it simple.
       }));
 
-      // Deducción de stock y Actualización de Cajas
-      if (docType !== 'presupuesto') {
-        // Stock
+      const client = selectedClient; // Current client
+
+      // --- Conditional Document Creation ---
+      if (docType === 'presupuesto') {
+        const orderData: Omit<Order, 'id'> = {
+          clientId: client?.id || null,
+          clientName: client?.name || 'Cliente Ocasional',
+          dateCreated: new Date().toISOString(),
+          items: mappedItems.map(item => ({...item, originalProduct: null})), // Adapt to OrderItem
+          total: totalCartAmount,
+          status: 'pendiente_preparacion',
+          notes: 'Generado como presupuesto desde ventas',
+          isServiceOrder: mappedItems.some(item => item.isManual),
+        };
+        await addOrder(orderData);
+        alert("Presupuesto generado con éxito!");
+      } else if (docType === 'remito') {
+        const remitoItems: RemitoItem[] = mappedItems.map(item => ({
+            id: item.productId,
+            sku: item.sku,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.unitPrice,
+            brand: item.brand,
+            selectedSaleUnit: item.selectedSaleUnit!,
+            originalPrimaryUnit: item.primaryUnit,
+            originalSaleUnit: item.selectedSaleUnit!,
+            originalSaleUnitConversionFactor: item.saleUnitConversionFactor!,
+        }));
+
+        const remitoData: Omit<Remito, 'id'> = {
+          date: new Date().toISOString(),
+          client: client?.name || 'Cliente Ocasional',
+          clientId: client?.id || null,
+          itemsCount: remitoItems.length,
+          itemsList: remitoItems,
+          total: totalCartAmount,
+          status: 'pendiente', // Remito is pending payment
+        };
+        await addRemito(remitoData);
+        alert("Remito generado con éxito! El stock ha sido deducido.");
+
+        // Deduct stock for physical items for remito
+        for (const item of cart) {
+          if (!item.isManual) {
+            const qtyToDeduct = item.quantity * item.saleUnitConversionFactor!;
+            await updateProduct(item.id, { stock: item.stockBeforeSale - qtyToDeduct });
+          }
+        }
+
+      } else { // 'ticket', 'factura_a', 'factura_b' (direct sale)
+        const saleItems: SaleItem[] = mappedItems;
+
+        await addSale({
+          clientName: client?.name || 'Mostrador',
+          clientId: client?.id || null,
+          items: saleItems,
+          total: totalCartAmount,
+          paymentDetails,
+          docType,
+          date: new Date().toISOString(),
+          status: 'completado',
+          seller: 'Usuario Actual', // Placeholder, replace with actual user
+          remitoIds: [], 
+        });
+
+        // Deduct stock for physical items
         for (const item of cart) {
           if (!item.isManual) {
             const qtyToDeduct = item.quantity * item.saleUnitConversionFactor!;
@@ -201,7 +283,7 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
           }
         }
         
-        // Cajas y Transacciones
+        // Process payments and update boxes
         for (const pd of paymentDetails) {
           const box = boxes.find(b => b.id === pd.targetBoxId);
           if (box) {
@@ -211,35 +293,22 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
               type: 'ingreso',
               boxId: pd.targetBoxId!,
               category: 'venta',
-              description: `Venta ${docType.toUpperCase()} - Cliente: ${selectedClient?.name || 'Mostrador'}`,
+              description: `Venta ${docType.toUpperCase()} - Cliente: ${client?.name || 'Mostrador'}`,
               paymentDetails: [pd]
             });
             await updateBox(box.id, { balance: box.balance + pd.netAmount });
           }
         }
+        alert("Operación completada. Caja y stock actualizados con valores NETOS.");
       }
 
-      await addSale({
-        clientName: selectedClient?.name || 'Mostrador',
-        clientId: selectedClient?.id || null,
-        items: saleItems,
-        total: totalCartAmount,
-        paymentDetails,
-        docType,
-        date: new Date().toISOString(),
-        status: docType === 'presupuesto' ? 'pendiente' : 'completado',
-        seller: 'Usuario Actual',
-        remitoIds: [], 
-      });
-
-      alert("Operación completada. Caja y stock actualizados con valores NETOS.");
       setCart([]);
       setShowCheckout(false);
       setPaymentDetails([]);
       setSelectedClient(null);
     } catch (e) {
       console.error(e);
-      alert("Error al procesar la venta.");
+      alert("Error al procesar la operación.");
     } finally {
       setIsProcessing(false);
     }
@@ -361,12 +430,50 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
             
             <div className="flex-1 p-10 overflow-y-auto custom-scrollbar space-y-8">
               <div className="flex justify-between items-center">
-                <h2 className="text-3xl font-black text-slate-900 uppercase italic">Confirmar Pago</h2>
+                <h2 className="text-3xl font-black text-slate-900 uppercase italic">Confirmar Operación</h2>
                 <button onClick={() => setShowCheckout(false)} className="p-2 bg-slate-100 rounded-full"><X className="w-6 h-6 text-slate-400" /></button>
               </div>
 
-              {/* Pagos y Comisiones */}
-              <div className="space-y-4">
+              {/* Document Type Selection */}
+              <div className="space-y-4 pt-4">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipo de Comprobante</label>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                  {[
+                    { id: 'ticket', label: 'Ticket', icon: Receipt },
+                    { id: 'factura_a', label: 'Factura A', icon: FileText },
+                    { id: 'factura_b', label: 'Factura B', icon: FileText },
+                    { id: 'remito', label: 'Remito', icon: ClipboardList },
+                    { id: 'presupuesto', label: 'Presupuesto', icon: MessageSquareText },
+                  ].map(doc => (
+                    <label key={doc.id} className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl cursor-pointer has-[:checked]:bg-orange-50 has-[:checked]:border-orange-500 transition-all">
+                      <input 
+                        type="radio" 
+                        name="docType" 
+                        value={doc.id} 
+                        checked={docType === doc.id} 
+                        onChange={(e) => setDocType(e.target.value as SaleDocType)}
+                        className="form-radio h-5 w-5 text-orange-600 focus:ring-orange-500"
+                      />
+                      <doc.icon className="w-5 h-5 text-slate-400 has-[:checked]:text-orange-600" />
+                      <span className="font-bold text-slate-700 has-[:checked]:text-orange-900">{doc.label}</span>
+                    </label>
+                  ))}
+                </div>
+                {(docType === 'remito' || docType === 'presupuesto') && (
+                    <div className="bg-blue-50 border border-blue-100 text-blue-700 p-4 rounded-2xl flex items-center gap-3">
+                        <Info className="w-5 h-5 shrink-0" />
+                        <span className="text-sm font-medium">
+                            {docType === 'remito' 
+                                ? "Un remito deduce stock pero no registra el cobro. Se factura posteriormente."
+                                : "Un presupuesto no afecta stock ni caja. Es solo una cotización."}
+                        </span>
+                    </div>
+                )}
+              </div>
+
+              {/* Pagos y Comisiones (Hidden for Remito/Presupuesto) */}
+              {(docType === 'ticket' || docType === 'factura_a' || docType === 'factura_b') && (
+              <div className="space-y-4 pt-4 border-t border-slate-100">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Detalle de Medios de Pago</label>
                 
                 <div className="space-y-2">
@@ -406,12 +513,14 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
                       <select 
                         className="w-full px-4 py-3 border border-slate-200 rounded-xl font-bold text-xs"
                         value={newPaymentDetail.method}
-                        onChange={e => setNewPaymentDetail({...newPaymentDetail, method: e.target.value as any})}
+                        onChange={e => setNewPaymentDetail({...newPaymentDetail, method: e.target.value as any, bank: '', checkNumber: '', dueDate: ''})} // Clear cheque fields on method change
                       >
                         <option value="efectivo">Efectivo</option>
                         <option value="tarjeta_debito">Débito</option>
                         <option value="tarjeta_credito">Crédito</option>
                         <option value="transferencia">Transferencia</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="echeq">E-Cheq</option>
                         <option value="cuenta_corriente">Cta. Corriente</option>
                       </select>
                     </div>
@@ -435,6 +544,7 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
                         className="w-full px-4 py-3 border border-slate-200 rounded-xl font-bold text-xs bg-white"
                         value={newPaymentDetail.targetBoxId}
                         onChange={e => setNewPaymentDetail({...newPaymentDetail, targetBoxId: e.target.value})}
+                        required // Make target box selection mandatory
                       >
                         <option value="">Seleccionar Caja...</option>
                         {boxes.filter(b => b.status === 'abierta').map(b => (
@@ -443,6 +553,44 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
                       </select>
                     </div>
                   </div>
+
+                  {/* Cheque / E-Cheq specific fields */}
+                  {(newPaymentDetail.method === 'cheque' || newPaymentDetail.method === 'echeq') && (
+                    <div className="grid grid-cols-2 gap-3 animate-in fade-in duration-200 pt-3 border-t border-slate-100">
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Banco</label>
+                            <input 
+                                type="text"
+                                value={newPaymentDetail.bank || ''}
+                                onChange={e => setNewPaymentDetail({...newPaymentDetail, bank: e.target.value})}
+                                placeholder="Nombre del Banco"
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl font-bold text-xs"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-[9px] font-black text-slate-400 uppercase ml-1">N° Cheque</label>
+                            <input 
+                                type="text"
+                                value={newPaymentDetail.checkNumber || ''}
+                                onChange={e => setNewPaymentDetail({...newPaymentDetail, checkNumber: e.target.value})}
+                                placeholder="Número de Cheque"
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl font-bold text-xs"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-1 col-span-2">
+                            <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Fecha de Vencimiento</label>
+                            <input 
+                                type="date"
+                                value={newPaymentDetail.dueDate || ''}
+                                onChange={e => setNewPaymentDetail({...newPaymentDetail, dueDate: e.target.value})}
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl font-bold text-xs"
+                                required
+                            />
+                        </div>
+                    </div>
+                  )}
 
                   {/* Preview de lo que ingresará */}
                   {newPaymentDetail.amount > 0 && (
@@ -464,13 +612,14 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
                   </button>
                 </div>
               </div>
+              )}
             </div>
 
             <div className="w-full md:w-[380px] bg-slate-900 p-10 text-white flex flex-col justify-between border-l border-white/5">
               <div className="space-y-8">
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Liquidación Final</p>
-                  <h3 className="text-2xl font-black text-orange-500 uppercase">{docType}</h3>
+                  <h3 className="text-2xl font-black text-orange-500 uppercase">{docType.replace('_', ' ')}</h3>
                 </div>
 
                 <div className="space-y-4 pt-6 border-t border-white/10">
@@ -478,27 +627,31 @@ export const Sales: React.FC<SalesProps> = ({ companyInfo }) => {
                     <span className="font-black uppercase text-lg">Total</span>
                     <span className="text-4xl font-black text-white">${totalCartAmount.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between items-center text-green-400 font-bold uppercase text-[10px] tracking-widest">
-                    <span>A Recibir (Neto)</span>
-                    <span>${paymentDetails.reduce((acc, pd) => acc + pd.netAmount, 0).toLocaleString()}</span>
-                  </div>
+                  {(docType === 'ticket' || docType === 'factura_a' || docType === 'factura_b') && (
+                    <div className="flex justify-between items-center text-green-400 font-bold uppercase text-[10px] tracking-widest">
+                        <span>A Recibir (Neto)</span>
+                        <span>${paymentDetails.reduce((acc, pd) => acc + pd.netAmount, 0).toLocaleString()}</span>
+                    </div>
+                  )}
                 </div>
 
+                {(docType === 'ticket' || docType === 'factura_a' || docType === 'factura_b') && (
                 <div className="space-y-4 pt-8 border-t border-white/10">
                   <div className="flex justify-between items-center font-bold text-sm">
                     <span className="text-slate-400">Restante Cobrar:</span>
                     <span className={remainingToPay > 0 ? 'text-red-500' : 'text-orange-500'}>${remainingToPay.toLocaleString()}</span>
                   </div>
                 </div>
+                )}
               </div>
 
               <button 
                 onClick={handleFinishSale}
-                disabled={isProcessing || (docType !== 'presupuesto' && Math.abs(remainingToPay) > 0.01)}
+                disabled={isProcessing || (docType !== 'remito' && docType !== 'presupuesto' && Math.abs(remainingToPay) > 0.01)}
                 className="w-full py-6 bg-orange-600 text-white rounded-[2rem] font-black text-xl shadow-2xl hover:bg-orange-500 transition-all flex items-center justify-center gap-3 active:scale-95 disabled:opacity-20"
               >
                 {isProcessing ? <Loader2 className="w-6 h-6 animate-spin" /> : <CheckCircle2 className="w-6 h-6" />}
-                {isProcessing ? 'PROCESANDO...' : 'FINALIZAR VENTA'}
+                {isProcessing ? 'PROCESANDO...' : 'FINALIZAR OPERACIÓN'}
               </button>
             </div>
           </div>

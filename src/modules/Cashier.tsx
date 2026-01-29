@@ -59,8 +59,7 @@ export const Cashier: React.FC = () => {
         boxId: boxId,
         category: formData.get('category') as any,
         description: formData.get('description') as string,
-        // Fix: added missing netAmount property required by PaymentDetail
-        paymentDetails: [{ id: `pm-${Date.now()}`, method: formData.get('method') as any, amount: amount, netAmount: amount }]
+        paymentDetails: [{ id: `pm-${Date.now()}`, method: formData.get('method') as any, amount: amount, netAmount: amount, targetBoxId: boxId }]
       });
 
       // Update actual box balance
@@ -429,6 +428,8 @@ export const Cashier: React.FC = () => {
                     <option value="efectivo">Efectivo Físico</option>
                     <option value="banco">Cuenta Bancaria</option>
                     <option value="virtual">Billetera Virtual (MP, etc)</option>
+                    {/* NEW: Caja a Depositar */}
+                    <option value="caja_a_depositar">Caja a Depositar</option>
                   </select>
                 </div>
                 {!editingBox && (
